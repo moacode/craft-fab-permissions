@@ -108,7 +108,7 @@ class FabPermissions extends Plugin
  */
         Craft::info(
             Craft::t(
-                'control-panel-permissions',
+                'craft-fab-permissions',
                 '{name} plugin loaded',
                 ['name' => $this->name]
             ),
