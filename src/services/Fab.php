@@ -8,15 +8,15 @@
  * @copyright Copyright (c) 2019 Josh Smith
  */
 
-namespace thejoshsmith\controlpanelpermissions\services;
+namespace thejoshsmith\fabpermissions\services;
 
-use thejoshsmith\controlpanelpermissions\ControlPanelPermissions;
+use thejoshsmith\fabpermissions\FabPermissions;
 
 use Craft;
 use craft\base\Component;
 
 /**
- * ControlPanelPermissionsService Service
+ * Fab Permissions Service
  *
  * All of your plugin’s business logic should go in services, including saving data,
  * retrieving data, etc. They provide APIs that your controllers, template variables,
@@ -25,10 +25,10 @@ use craft\base\Component;
  * https://craftcms.com/docs/plugins/services
  *
  * @author    Josh Smith
- * @package   ControlPanelPermissions
+ * @package   FabPermissions
  * @since     1.0.0
  */
-class ControlPanelPermissionsService extends Component
+class Fab extends Component
 {
     // Public Methods
     // =========================================================================
@@ -39,7 +39,7 @@ class ControlPanelPermissionsService extends Component
      *
      * From any other plugin file, call it like this:
      *
-     *     ControlPanelPermissions::$plugin->controlPanelPermissionsService->exampleService()
+     *     FabPermissions::$plugin->fab->exampleService()
      *
      * @return mixed
      */

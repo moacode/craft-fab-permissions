@@ -8,7 +8,8 @@
         "cms",
         "craftcms",
         "craft-plugin",
-        "control panel permissions"
+        "field permissions",
+        "tab permissions"
     ],
     "support": {
         "docs": "???",
@@ -26,18 +27,18 @@
     },
     "autoload": {
         "psr-4": {
-          "thejoshsmith\\controlpanelpermissions\\": "src/"
+          "thejoshsmith\\fabpermissions\\": "src/"
         }
     },
     "extra": {
-        "name": "Control Panel Permissions",
-        "handle": "control-panel-permissions",
+        "name": "Field and Tab Permissions",
+        "handle": "craft-fab-permissions",
         "hasCpSettings": false,
         "hasCpSection": false,
         "changelogUrl": "???",
         "components": {
-            "controlPanelPermissionsService": "thejoshsmith\\controlpanelpermissions\\services\\ControlPanelPermissionsService"
+            "fabPermissionsService": "thejoshsmith\\fabpermissions\\services\\fab"
         },
-        "class": "thejoshsmith\\controlpanelpermissions\\ControlPanelPermissions"
+        "class": "thejoshsmith\\fabpermissions\\FabPermissions"
     }
 }

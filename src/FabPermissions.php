@@ -8,9 +8,9 @@
  * @copyright Copyright (c) 2019 Josh Smith
  */
 
-namespace thejoshsmith\controlpanelpermissions;
+namespace thejoshsmith\fabpermissions;
 
-use thejoshsmith\controlpanelpermissions\services\ControlPanelPermissionsService as ControlPanelPermissionsServiceService;
+use thejoshsmith\fabpermissions\services\Fab as FabService;
 
 use Craft;
 use craft\base\Plugin;
@@ -30,21 +30,21 @@ use yii\base\Event;
  * https://craftcms.com/docs/plugins/introduction
  *
  * @author    Josh Smith
- * @package   ControlPanelPermissions
+ * @package   FabPermissions
  * @since     1.0.0
  *
- * @property  ControlPanelPermissionsServiceService $controlPanelPermissionsService
+ * @property  FabService $fabPermissionsService
  */
-class ControlPanelPermissions extends Plugin
+class FabPermissions extends Plugin
 {
     // Static Properties
     // =========================================================================
 
     /**
      * Static property that is an instance of this plugin class so that it can be accessed via
-     * ControlPanelPermissions::$plugin
+     * FabPermissions::$plugin
      *
-     * @var ControlPanelPermissions
+     * @var FabPermissions
      */
     public static $plugin;
 
@@ -63,7 +63,7 @@ class ControlPanelPermissions extends Plugin
 
     /**
      * Set our $plugin static property to this class so that it can be accessed via
-     * ControlPanelPermissions::$plugin
+     * FabPermissions::$plugin
      *
      * Called after the plugin class is instantiated; do any one-time initialization
      * here such as hooks and events.
