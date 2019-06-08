@@ -1,0 +1,43 @@
+{
+    "name": "thejoshsmith/control-panel-permissions",
+    "description": "A plugin that allows admins to set tab and field restrictions for particular user groups in the system. For example, an admin could create a tabbed section that only they could see when creating entries.",
+    "type": "craft-plugin",
+    "version": "1.0.0",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "control panel permissions"
+    ],
+    "support": {
+        "docs": "???",
+        "issues": "???"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Josh Smith",
+            "homepage": "https://joshsmith.dev"
+        }
+    ],
+    "require": {
+        "craftcms/cms": "^3.0.0-RC1"
+    },
+    "autoload": {
+        "psr-4": {
+          "thejoshsmith\\controlpanelpermissions\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "Control Panel Permissions",
+        "handle": "control-panel-permissions",
+        "hasCpSettings": false,
+        "hasCpSection": false,
+        "changelogUrl": "???",
+        "components": {
+            "controlPanelPermissionsService": "thejoshsmith\\controlpanelpermissions\\services\\ControlPanelPermissionsService"
+        },
+        "class": "thejoshsmith\\controlpanelpermissions\\ControlPanelPermissions"
+    }
+}
