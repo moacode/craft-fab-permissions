@@ -9,3 +9,4 @@
  * @package   CraftHQ
  * @since     1.0.0
  */
+.icon.users:before { content: 'users'; }

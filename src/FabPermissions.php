@@ -17,6 +17,9 @@ use craft\base\Plugin;
 use craft\services\Plugins;
 use craft\events\PluginEvent;
 use craft\events\FieldLayoutEvent;
+use craft\events\TemplateEvent;
+use craft\events\RegisterTemplateRootsEvent;
+use craft\web\View;
 use craft\services\Fields;
 use thejoshsmith\fabpermissions\assetbundles\fabpermissions\FabPermissionsAsset;
 
@@ -80,30 +83,12 @@ class FabPermissions extends Plugin
         parent::init();
         self::$plugin = $this;
 
-        // Do something after we're installed
-        Event::on(
-            Plugins::class,
-            Plugins::EVENT_AFTER_INSTALL_PLUGIN,
-            function (PluginEvent $event) {
-                if ($event->plugin === $this) {
-                    // We were just installed
-                }
-            }
-        );
-
-        // Process the saving of permisisons on tabs and fields
-        Event::on(
-            Fields::class,
-            Fields::EVENT_AFTER_SAVE_FIELD_LAYOUT,
-            function(FieldLayoutEvent $event) {
-                $this->fabService->saveFieldLayoutPermissions($event->layout);
-            }
-        );
+        $this->registerComponents();
+        $this->handleEvents();
 
         $request = Craft::$app->getRequest();
         if( $request->getIsCpRequest() ){
-            // register asset bundle
-            FabPermissionsAsset::register(Craft::$app->view);
+            FabPermissionsAsset::register(Craft::$app->view); // register asset bundle
         }
 
         Craft::info(
@@ -119,4 +104,70 @@ class FabPermissions extends Plugin
     // Protected Methods
     // =========================================================================
 
+    protected function registerComponents()
+    {
+        $this->setComponents([
+            'fabService' => FabService::class
+        ]);
+    }
+
+    protected function handleEvents()
+    {
+        // Do something after we're installed
+        Event::on(
+            Plugins::class,
+            Plugins::EVENT_AFTER_INSTALL_PLUGIN,
+            function (PluginEvent $event) {
+                if ($event->plugin === $this) {
+                    // We were just installed
+                }
+            }
+        );
+
+        // Extend the CP template to override the tabs template with our modified version
+        Event::on(
+            View::class,
+            View::EVENT_REGISTER_CP_TEMPLATE_ROOTS,
+            function (RegisterTemplateRootsEvent $e) {
+                if (is_dir($baseDir = $this->getBasePath().DIRECTORY_SEPARATOR.'templates')) {
+                    $e->roots[$this->id] = $baseDir;
+                }
+            }
+        );
+
+        // Process the saving of permisisons on tabs and fields
+        Event::on(
+            Fields::class,
+            Fields::EVENT_AFTER_SAVE_FIELD_LAYOUT,
+            function(FieldLayoutEvent $event) {
+                $this->fabService->saveFieldLayoutPermissions($event->layout);
+            }
+        );
+
+        Event::on(
+            View::class,
+            View::EVENT_BEFORE_RENDER_TEMPLATE,
+            function(TemplateEvent $event) {
+
+                // $view = Craft::$app->getView();
+                // if( $view->getTemplateMode() === $view::TEMPLATE_MODE_CP ){
+                //     $event->variables = $this->fabService->processCpEntriesVariables($event->variables);
+                // }
+// echo '<pre> $event->template: '; print_r($event->template); echo '</pre>'; die();
+                // if( $event->template === "settings/sections/_entrytypes/edit" ){
+                //     // $view->setTemplatesPath('');
+                // }
+
+                switch ($event->template) {
+                    case '_includes/tabs':
+                    case 'entries/_edit':
+                        $event->variables = $this->fabService->processCpEntriesVariables($event->variables);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        );
+    }
 }
