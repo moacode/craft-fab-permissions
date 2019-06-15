@@ -9,7 +9,12 @@
  * @package   CraftHQ
  * @since     1.0.0
  */
-.icon.users:before { content: 'users'; }
+.icon.users:before {
+	content: '\F111';
+	font-size: 12px;
+	color: #d75946;
+	opacity: 1;
+}
 .fab-spinner {
     background-size: 18px;
     height: 18px;

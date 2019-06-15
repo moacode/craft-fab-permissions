@@ -161,7 +161,7 @@ class Install extends Migration
             FabPermissionsRecord::tableName(),
             'fieldId',
             '{{%fieldlayoutfields}}',
-            'id',
+            'fieldId',
             'CASCADE',
             'CASCADE'
         );

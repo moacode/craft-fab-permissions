@@ -20,7 +20,17 @@ class Fields extends CraftFieldsService
      */
     public function getFieldsByLayoutId(int $layoutId): array
     {
+        $user = Craft::$app->getUser();
         $fields = parent::getFieldsByLayoutId($layoutId);
+        $fabService = FabPermissions::$plugin->fabService;
+
+        // Check if this user has permissions to view this field
+        foreach ($fields as $i => $field) {
+            if( !$fabService->hasFieldPermission($layoutId, $field, $user) ){
+                unset($fields[$i]);
+            }
+        }
+
         return $fields;
     }
 

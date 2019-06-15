@@ -43,7 +43,10 @@ class FabPermissionsController extends Controller
 
         if( empty($layoutId) ){
             return [
-                'data' => ['tabs' => [], 'fields' => []]
+                'data' => [
+                    'tabs' => [],
+                    'fields' => []
+                ]
             ];
         }
 
@@ -54,7 +57,7 @@ class FabPermissionsController extends Controller
         foreach ($layout->getTabs() as $tab) {
 
             // Set the tab name into the data array
-            $tabsData[$tab->name] = [];
+            $tabsData[urlencode($tab->name)] = [];
 
             // Fetch permissions for this tab
             $tabPermissions = FabPermissions::$plugin->fabService->getPermissions([
@@ -70,6 +73,16 @@ class FabPermissionsController extends Controller
         }
 
         $fieldsData = [];
+        $fieldPermissions = FabPermissions::$plugin->fabService->getPermissions([
+            'layoutId' => $layoutId,
+            'tabId' => null
+        ]);
+
+        // Loop permission records and assign to tab data
+        foreach ($fieldPermissions as $permission) {
+            $userGroupHandle = $permission->getUserGroup()->handle;
+            $fieldsData[$permission->fieldId][$userGroupHandle] = $permission->hasPermission();
+        }
 
         return [
             'data' => [

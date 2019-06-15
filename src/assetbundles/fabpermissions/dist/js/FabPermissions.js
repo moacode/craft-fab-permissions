@@ -108,7 +108,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 		$tab.data('fabPermissions', $.extend({}, fabPermissionsData, {originalName: this._getTabName($tab)}));
 
 		// Show a loading spinner
-		this.showSpinnerIcon($tab);
+		this.showSpinnerIcon($tab.find('.tab'));
 
 		var self = this;
 		this.loadingPromise.done(function(){
@@ -130,6 +130,36 @@ Craft.FabPermissions = Garnish.Base.extend({
 	},
 
 	/**
+	 * Method called when a field is initialised
+	 * @author Josh Smith <josh.smith@platocreative.co.nz>
+	 * @param  {object} $field jQuery collection
+	 * @return {void}
+	 */
+	initField: function($field){
+
+		// Show a loading spinner
+		this.showSpinnerIcon($field);
+
+		var self = this;
+		this.loadingPromise.done(function(){
+			self.populateFieldInputs($field);
+		// Remove the loading class once the Fab Permissions data is loaded
+		}).always(function(){
+
+			// Get a handle on the menu data
+			var $editBtn = $field.find('.settings');
+			var menuData = $editBtn.data('menubtn');
+			var $menu = menuData.menu.$container;
+
+			// Remove the disabled menu item
+			$menu.find('.js--fab-set-permissions').removeClass('disabled');
+
+			// Hide the loading spinner
+			self.hideSpinnerIcon($field);
+		});
+	},
+
+	/**
 	 * Populates hidden inputs that hold the tab permission data
 	 * Tab names are taken from the latest label text
 	 * @author Josh Smith <josh.smith@platocreative.co.nz>
@@ -146,7 +176,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 
 		if( hasPermissions ){
 			// Show an icon on each tab bar if permissions have been set.
-			this.showTabIcon($tab);
+			this.showFabIcon($tab.find('.tab'));
 
 			// Loop the permissions and add hidden inputs
 			for(var userGroupHandle in tabPermissions){
@@ -160,48 +190,77 @@ Craft.FabPermissions = Garnish.Base.extend({
 	},
 
 	/**
+	 * Populates hidden inputs that hold the field permission data
+	 * Tab names are taken from the latest label text
+	 * @author Josh Smith <josh.smith@platocreative.co.nz>
+	 * @param  {object} $field jQuery collection
+	 * @return {void}
+	 */
+	populateFieldInputs: function($field){
+
+		var self = this,
+			hasSavedPermissions = false,
+			fieldPermissions = this.data.fields[$field.data('id')] || null,
+			hasPermissions = ($.isPlainObject(fieldPermissions) && Object.keys(fieldPermissions).length);
+
+		if( hasPermissions ){
+			// Show an icon on each field bar if permissions have been set.
+			this.showFabIcon($field);
+
+			// Loop the permissions and add hidden inputs
+			for(var userGroupHandle in fieldPermissions){
+				var hasPermission = fieldPermissions[userGroupHandle];
+				self.addFieldInput($field, userGroupHandle, hasPermission);
+			}
+		}
+
+		// Reset the form unload values, as we've injected hidden inputs
+		Craft.cp.initConfirmUnloadForms();
+	},
+
+	/**
 	 * Shows a tab spinner icon
 	 */
-	showSpinnerIcon: function($tab){
-		var $tabSpinner = $tab.find('.js--fab-spinner');
+	showSpinnerIcon: function($el){
+		var $spinner = $el.find('.js--fab-spinner');
 
-		if( $tabSpinner.length ){
-			$tabSpinner.show();
+		if( $spinner.length ){
+			$spinner.show();
 		} else {
-			$tab.find('.tab').append('<div class="fab-inline fab-spinner spinner js--fab-spinner"/>');
+			$el.children().first().after('<div class="fab-inline fab-spinner spinner icon js--fab-spinner"/>');
 		}
 	},
 
 	/**
 	 * Hides a tab spinner icon
 	 */
-	hideSpinnerIcon: function($tab){
-		var $tabSpinner = $tab.find('.js--fab-spinner');
-		if( $tabSpinner.length ){
-			$tabSpinner.hide();
+	hideSpinnerIcon: function($el){
+		var $spinner = $el.find('.js--fab-spinner');
+		if( $spinner.length ){
+			$spinner.hide();
 		}
 	},
 
 	/**
 	 * Shows a tab fab permissions icon
 	 */
-	showTabIcon: function($tab){
-		var $tabIcon = $tab.find('.js--fab-users');
+	showFabIcon: function($el){
+		var $fabIcon = $el.find('.js--fab-users');
 
-		if( $tabIcon.length ){
-			$tabIcon.show();
+		if( $fabIcon.length ){
+			$fabIcon.show();
 		} else {
-			$tab.find('.tab').append('<div class="fab-inline icon users js--fab-users"/>');
+			$el.find('.js--fab-spinner').after('<div class="fab-inline icon users js--fab-users"/>');
 		}
 	},
 
 	/**
 	 * Hides a tab fab permissions icon
 	 */
-	hideTabIcon: function($tab){
-		var $tabIcon = $tab.find('.js--fab-users');
-		if( $tabIcon.length ){
-			$tabIcon.hide();
+	hideFabIcon: function($el){
+		var $fabIcon = $el.find('.js--fab-users');
+		if( $fabIcon.length ){
+			$fabIcon.hide();
 		}
 	},
 
@@ -213,7 +272,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * @param  {Boolean} hasPermission Whether or not this user group has permissions to view this tab
 	 */
 	addTabInput: function($tab, handle, hasPermission){
-		$tab.append('<input class="fab-tab-id-input" type="hidden" name="' + this._getFieldInputName($tab) + '[' + handle + ']" value="'+(hasPermission ? '1' : '0')+'">')
+		$tab.append('<input class="fab-id-input" type="hidden" name="' + this._getFieldInputName($tab) + '[' + handle + ']" value="'+(hasPermission ? '1' : '0')+'">');
 	},
 
 	/**
@@ -223,14 +282,28 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * @return {void}
 	 */
 	removeTabInputs: function($tab){
-		$tab.find('.fab-tab-id-input').remove();
+		$tab.find('.fab-id-input').remove();
 	},
 
-	addField: function(){
-
+	/**
+	 * Adds a field hidden input to the DOM
+	 * @author Josh Smith <josh.smith@platocreative.co.nz>
+	 * @param  {object}  $field        jQuery collection
+	 * @param  {string}  handle        User group handle
+	 * @param  {Boolean} hasPermission Whether or not this user group has permissions to view this field
+	 */
+	addFieldInput: function($field, handle, hasPermission){
+		$field.append('<input class="fab-id-input" type="hidden" data-id="'+$field.data('id')+'" data-handle="'+handle+'" name="fieldPermissions[' + $field.data('id') + '][' + handle + ']" value="'+(hasPermission ? '1' : '0')+'">');
 	},
-	removeField: function(){
 
+	/**
+	 * Removes all fab permissions hidden inputs for the given field
+	 * @author Josh Smith <josh.smith@platocreative.co.nz>
+	 * @param  {object} $field jQuery collection
+	 * @return {void}
+	 */
+	removeFieldInputs: function($field){
+		$field.find('.fab-id-input').remove();
 	},
 
 	/**
@@ -271,7 +344,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * @return {Boolean}
 	 */
 	isPermissionSet: function($tab, handle){
-		var $permissions = $tab.find('.fab-tab-id-input');
+		var $permissions = $tab.find('.fab-id-input');
 		if( ! $permissions.length ) return false;
 
 		var self = this,
@@ -292,6 +365,34 @@ Craft.FabPermissions = Garnish.Base.extend({
 	},
 
 	/**
+	 * Returns whether a particular permission is set or not
+	 * @author Josh Smith <josh.smith@platocreative.co.nz>
+	 * @param  {string}  handle User group handle
+	 * @return {Boolean}
+	 */
+	isFieldPermissionSet: function($field, handle){
+		var $permissions = $field.find('.fab-id-input');
+		if( ! $permissions.length ) return false;
+
+		var self = this,
+			matchedHandle = false;
+
+		// Loop each permission input and return whether a permission is set
+		$permissions.each(function(i, input){
+
+			var $input = $(input);
+
+			if(
+				$field.data('id') === $input.data('id') &&
+				$input.data('handle') === handle &&
+				$input.val() === '1'
+			) matchedHandle = true;
+		});
+
+		return matchedHandle;
+	},
+
+	/**
 	 * Helper function to escape regular expressions
 	 * @author Josh Smith <josh.smith@platocreative.co.nz>
 	 * @param  {string} string
@@ -304,12 +405,17 @@ Craft.FabPermissions = Garnish.Base.extend({
 {
     defaults: {
         contentSummary: [],
-        fieldInputName: 'tabPermissions[__TAB_NAME__]',
+        fieldInputName: 'tabPermissions[__TAB_NAME__]', // Awkwardly named, but kept to utilize the default Craft methods that use this property.
         onSubmit: $.noop,
         redirect: null
     }
 });
 
+/**
+ * Initialises FabPermissions
+ * @see  Craft.FieldLayoutDesigner.prototype.init
+ * @return {void}
+ */
 var init = Craft.FieldLayoutDesigner.prototype.init;
 Craft.FieldLayoutDesigner.prototype.init = function(container, settings) {
 
@@ -343,6 +449,12 @@ Craft.FieldLayoutDesigner.prototype.initTab = function($tab) {
 	FabPermissions.initTab($tab);
 };
 
+/**
+ * Method that handles tab option selections
+ * @see  Craft.FieldLayoutDesigner.prototype.onTabOptionSelect
+ * @param  {object} option Option DOM fragment
+ * @return {void}
+ */
 var onTabOptionSelect = Craft.FieldLayoutDesigner.prototype.onTabOptionSelect;
 Craft.FieldLayoutDesigner.prototype.onTabOptionSelect = function(option) {
 
@@ -365,6 +477,12 @@ Craft.FieldLayoutDesigner.prototype.onTabOptionSelect = function(option) {
     }
 };
 
+/**
+ * Update the tab inputs when a tab is renamed
+ * @see  Craft.FieldLayoutDesigner.prototype.renameTab
+ * @param  {object} $tab jQuery collection
+ * @return {void}
+ */
 var renameTab = Craft.FieldLayoutDesigner.prototype.renameTab;
 Craft.FieldLayoutDesigner.prototype.renameTab = function($tab) {
 	renameTab.call(this, $tab);
@@ -380,14 +498,70 @@ Craft.FieldLayoutDesigner.prototype.renameTab = function($tab) {
  * @param  {object} $tab jQuery collection
  */
 Craft.FieldLayoutDesigner.prototype.setPermissionsTab = function($tab){
-	new Craft.UserPermissionSelectorModal({$tab: $tab});
+	new Craft.TabUserPermissionSelectorModal({$el: $tab});
 };
 
 /**
- * Modal object that allows a user to set permissions on a tab or field
+ * Extend the field layout designer with options to set user permissions on fields and tabs
+ * @type {function}
+ */
+var initField = Craft.FieldLayoutDesigner.prototype.initField;
+Craft.FieldLayoutDesigner.prototype.initField = function($field) {
+	initField.call(this, $field);
+
+	// Extract the edit button settings from the tab
+	var $editBtn = $field.find('.settings');
+	var menuData = $editBtn.data('menubtn');
+	var $menu = menuData.menu.$container;
+
+	// Create a new menu option element
+	var $menuOption = $('<li><a data-action="setpermissions" class="disabled js--fab-set-permissions">' + Craft.t('app', 'Set Permissions') + '</a></li>');
+
+	// Add it to the menu collection, and register the option within the Garnish Menu object
+	$menu.find('ul').prepend($menuOption);
+	menuData.menu.addOptions($menuOption.find('a'));
+
+	FabPermissions.initField($field);
+};
+
+/**
+ * Method that handles field option selections
+ * @see  Craft.FieldLayoutDesigner.prototype.onFieldOptionSelect
+ * @param  {object} option Option DOM fragment
+ * @return {void}
+ */
+var onFieldOptionSelect = Craft.FieldLayoutDesigner.prototype.onFieldOptionSelect;
+Craft.FieldLayoutDesigner.prototype.onFieldOptionSelect = function(option) {
+
+	// Call the original method
+	onFieldOptionSelect.call(this, option);
+
+    var $option = $(option),
+        $field = $option.data('menu').$anchor.parent(),
+        action = $option.data('action');
+
+    switch (action) {
+        case 'setpermissions': {
+            this.setPermissionsField($field);
+            break;
+        }
+    }
+};
+
+/**
+ * Opens a modal to set user permissions on the selected field.
+ * @author Josh Smith <josh.smith@platocreative.co.nz>
+ * @param  {object} $field jQuery collection
+ */
+Craft.FieldLayoutDesigner.prototype.setPermissionsField = function($field){
+	new Craft.FieldUserPermissionSelectorModal({$el: $field});
+};
+
+/**
+ * Base Modal object that allows a user to set permissions on a tab or field
  * @author Josh Smith <josh.smith@platocreative.co.nz>
  */
-Craft.UserPermissionSelectorModal = Garnish.Modal.extend({
+Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 
 	settings: {},
 	userGroups: [],
@@ -398,7 +572,7 @@ Craft.UserPermissionSelectorModal = Garnish.Modal.extend({
 	init: function(settings) {
 
 		var self = this;
-		this.settings = $.extend({}, Craft.UserPermissionSelectorModal.defaults, settings);
+		this.settings = $.extend({}, Craft.BaseUserPermissionSelectorModal.defaults, settings);
 
 		this.$form = $(
 	        '<form class="modal fitted deleteusermodal" method="post" accept-charset="UTF-8">' +
@@ -437,35 +611,8 @@ Craft.UserPermissionSelectorModal = Garnish.Modal.extend({
 	    this.base(this.$form, settings);
 	},
 
-	/**
-	 * Handles the form submission.
-	 * This populates hidden inputs with the selected user group handles.
-	 * @author Josh Smith <josh.smith@platocreative.co.nz>
-	 * @param  {object} e Event object
-	 * @return {void}
-	 */
 	handleSubmit: function(e){
-		e.preventDefault();
-
-		// Remove existing selections
-		FabPermissions.removeTabInputs(this.settings.$tab);
-
-		var self = this;
-
-		// Loop through each non-disabled checkbox option, and render hidden inputs into the DOM.
-		this.$form.find('.options input[type="checkbox"]').each(function(i, checkbox){
-
-			var $checkbox = $(checkbox);
-			if( !$checkbox.is(':disabled') ){
-
-				// Append the hidden input
-				FabPermissions.addTabInput(self.settings.$tab, $checkbox.val(), $checkbox.is(':checked'));
-			}
-		});
-
-		FabPermissions.showTabIcon(self.settings.$tab);
-
-		return this.hide();
+		throw Error('handleSubmit must not be called directly.');
 	},
 
 	/**
@@ -486,9 +633,85 @@ Craft.UserPermissionSelectorModal = Garnish.Modal.extend({
 		userGroups.forEach(function(userGroup){
 
 			// Use saved defaults if the user hasn't made changes yet.
-			var isPermissionSet = FabPermissions.isPermissionSet(self.settings.$tab, userGroup.handle);
+			var isPermissionSet = self._isPermissionSet(self.settings.$el, userGroup.handle);
 
 			$options.append('<div><label><input type="checkbox" '+(isPermissionSet ? 'checked="checked"' : '')+' value="'+userGroup.handle+'" name="'+userGroup.handle+'"/> ' + Craft.t('app', userGroup.name) + '</label></div>');
 		});
 	},
+
+	_isPermissionSet: function($el, handle){
+		return FabPermissions.isPermissionSet($el, handle);
+	}
+});
+
+Craft.TabUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.extend({
+
+	/**
+	 * Handles the form submission.
+	 * This populates hidden inputs with the selected user group handles.
+	 * @author Josh Smith <josh.smith@platocreative.co.nz>
+	 * @param  {object} e Event object
+	 * @return {void}
+	 */
+	handleSubmit: function(e){
+		e.preventDefault();
+
+		// Remove existing selections
+		FabPermissions.removeTabInputs(this.settings.$el);
+
+		var self = this;
+
+		// Loop through each non-disabled checkbox option, and render hidden inputs into the DOM.
+		this.$form.find('.options input[type="checkbox"]').each(function(i, checkbox){
+
+			var $checkbox = $(checkbox);
+			if( !$checkbox.is(':disabled') ){
+
+				// Append the hidden input
+				FabPermissions.addTabInput(self.settings.$el, $checkbox.val(), $checkbox.is(':checked'));
+			}
+		});
+
+		FabPermissions.showFabIcon(self.settings.$el.find('.tab'));
+
+		return this.hide();
+	}
+});
+
+Craft.FieldUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.extend({
+
+	/**
+	 * Handles the form submission.
+	 * This populates hidden inputs with the selected user group handles.
+	 * @author Josh Smith <josh.smith@platocreative.co.nz>
+	 * @param  {object} e Event object
+	 * @return {void}
+	 */
+	handleSubmit: function(e){
+		e.preventDefault();
+
+		// Remove existing selections
+		FabPermissions.removeFieldInputs(this.settings.$el);
+
+		var self = this;
+
+		// Loop through each non-disabled checkbox option, and render hidden inputs into the DOM.
+		this.$form.find('.options input[type="checkbox"]').each(function(i, checkbox){
+
+			var $checkbox = $(checkbox);
+			if( !$checkbox.is(':disabled') ){
+
+				// Append the hidden input
+				FabPermissions.addFieldInput(self.settings.$el, $checkbox.val(), $checkbox.is(':checked'));
+			}
+		});
+
+		FabPermissions.showFabIcon(self.settings.$el);
+
+		return this.hide();
+	},
+
+	_isPermissionSet: function($el, handle){
+		return FabPermissions.isFieldPermissionSet($el, handle);
+	}
 });

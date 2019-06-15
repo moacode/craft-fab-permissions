@@ -14,6 +14,7 @@ use Craft;
 use craft\base\Component;
 use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
+use craft\base\Field;
 use craft\web\User;
 
 use thejoshsmith\fabpermissions\records\FabPermissions as FabPermissionRecord;
@@ -26,17 +27,12 @@ use thejoshsmith\fabpermissions\records\FabPermissions as FabPermissionRecord;
  */
 class Fab extends Component
 {
-    // const DEFAULT_PERMISSION = '1';
-
-    // public function getPermission($criteria = [])
-    // {
-    //     $currentSite = Craft::$app->sites->getCurrentSite();
-    //     $criteria['siteId'] = $currentSite->id;
-    //     $fabPermission = FabPermissionRecord::findOne($criteria);
-
-    //     return (empty($fabPermission) ? null : $fabPermission->getAttribute('permission'));
-    // }
-
+    /**
+     * Returns Fab Permission records matching the passed criteria
+     * @author Josh Smith <josh.smith@platocreative.co.nz>
+     * @param  array  $criteria An array of criteria filters
+     * @return array
+     */
     public function getPermissions($criteria = []) : array
     {
         $currentSite = Craft::$app->sites->getCurrentSite();
@@ -66,6 +62,44 @@ class Fab extends Component
             'siteId' => $currentSite->id
         ]);
 
+        // Return true if no permissions have been set on this tab
+        if( empty($fabPermissions) ) return true;
+
+        // Loop the permissions and determine if the user can see the tab
+        foreach ($fabPermissions as $fabPermission) {
+            $isUserInGroup = $user->getIdentity()->isInGroup($fabPermission->userGroupId);
+            if( $isUserInGroup && (bool) $fabPermission->permission === true ){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns whether the passed user has permission to view the passed field for the current site
+     * @author Josh Smith <josh.smith@platocreative.co.nz>
+     * @param  int     $layoutId    Layout ID
+     * @param  Field   $field       Field object
+     * @param  User    $user        User object
+     * @param  Site    $currentSite Site object
+     * @return boolean
+     */
+    public function hasFieldPermission(int $layoutId, Field $field, User $user, $currentSite = null)
+    {
+        if( $user->getIsAdmin() ) return true;
+        if( $currentSite === null ) $currentSite = Craft::$app->sites->getCurrentSite();
+
+         // Fetch permission records
+        $fabPermissions = FabPermissionRecord::findAll([
+            'layoutId' => $layoutId,
+            'fieldId' => $field->id,
+            'siteId' => $currentSite->id
+        ]);
+
+        // Return true if no permissions have been set on this tab
+        if( empty($fabPermissions) ) return true;
+
         // Loop the permissions and determine if the user can see the tab
         foreach ($fabPermissions as $fabPermission) {
             $isUserInGroup = $user->getIdentity()->isInGroup($fabPermission->userGroupId);
@@ -86,7 +120,9 @@ class Fab extends Component
     public function saveFieldLayoutPermissions(FieldLayout $layout)
     {
         $request = Craft::$app->getRequest();
-        $postData = $request->post('tabPermissions');
+        $postData = $request->post('tabPermissions') || $request->post('fieldPermissions');
+        $tabPermissions = $request->post('tabPermissions') ?? [];
+        $fieldPermissions = $request->post('fieldPermissions') ?? [];
 
         // we can't continue if there's no post data
         if( empty($postData) ) return false;
@@ -96,7 +132,7 @@ class Fab extends Component
 
         // Loop tabs and work out permissions
         foreach ($layout->getTabs() as $tab) {
-            foreach ($postData as $tabName => $permissions) {
+            foreach ($tabPermissions as $tabName => $permissions) {
 
                 if( urldecode($tabName) !== $tab->name ) continue;
 
@@ -104,11 +140,26 @@ class Fab extends Component
                     $fabPermissionsData[] = [
                         $layout->id,
                         $tab->id,
+                        null,
                         $currentSite->id,
                         Craft::$app->getUserGroups()->getGroupByHandle($handle)->id,
                         $value
                     ];
                 }
+            }
+        }
+
+        // Loop field permissions and work out permissions
+        foreach ($fieldPermissions as $fieldId => $permissions) {
+            foreach ($permissions as $handle => $value) {
+                $fabPermissionsData[] = [
+                    $layout->id,
+                    null,
+                    $fieldId,
+                    $currentSite->id,
+                    Craft::$app->getUserGroups()->getGroupByHandle($handle)->id,
+                    $value
+                ];
             }
         }
 
@@ -118,7 +169,7 @@ class Fab extends Component
             array_intersect($fabPermissionsRecord->attributes(), [
                 'layoutId',
                 'tabId',
-                // 'fieldId',
+                'fieldId',
                 'siteId',
                 'userGroupId',
                 'permission',
