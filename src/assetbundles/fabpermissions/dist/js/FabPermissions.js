@@ -272,7 +272,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * @param  {Boolean} hasPermission Whether or not this user group has permissions to view this tab
 	 */
 	addTabInput: function($tab, handle, hasPermission){
-		$tab.append('<input class="fab-id-input" type="hidden" name="' + this._getFieldInputName($tab) + '[' + handle + ']" value="'+(hasPermission ? '1' : '0')+'">');
+		$tab.append('<input class="fab-id-input js--fab-tab-input" type="hidden" name="' + this._getFieldInputName($tab) + '[' + handle + ']" value="'+(hasPermission ? '1' : '0')+'">');
 	},
 
 	/**
@@ -282,7 +282,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * @return {void}
 	 */
 	removeTabInputs: function($tab){
-		$tab.find('.fab-id-input').remove();
+		$tab.find('.js--fab-tab-input').remove();
 	},
 
 	/**
@@ -293,7 +293,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * @param  {Boolean} hasPermission Whether or not this user group has permissions to view this field
 	 */
 	addFieldInput: function($field, handle, hasPermission){
-		$field.append('<input class="fab-id-input" type="hidden" data-id="'+$field.data('id')+'" data-handle="'+handle+'" name="fieldPermissions[' + $field.data('id') + '][' + handle + ']" value="'+(hasPermission ? '1' : '0')+'">');
+		$field.append('<input class="fab-id-input js--fab-field-input" type="hidden" data-id="'+$field.data('id')+'" data-handle="'+handle+'" name="fieldPermissions[' + $field.data('id') + '][' + handle + ']" value="'+(hasPermission ? '1' : '0')+'">');
 	},
 
 	/**
@@ -303,7 +303,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * @return {void}
 	 */
 	removeFieldInputs: function($field){
-		$field.find('.fab-id-input').remove();
+		$field.find('.js--fab-field-input').remove();
 	},
 
 	/**
