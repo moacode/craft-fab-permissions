@@ -13,9 +13,10 @@ namespace thejoshsmith\fabpermissions\services;
 use Craft;
 use craft\base\Component;
 use craft\models\FieldLayout;
-use thejoshsmith\fabpermissions\records\FabPermissions as FabPermissionRecord;
 use craft\models\FieldLayoutTab;
 use craft\web\User;
+
+use thejoshsmith\fabpermissions\records\FabPermissions as FabPermissionRecord;
 
 /**
  * Fab Permissions Service
@@ -27,47 +28,22 @@ class Fab extends Component
 {
     // const DEFAULT_PERMISSION = '1';
 
-    public function getPermission($criteria = [])
+    // public function getPermission($criteria = [])
+    // {
+    //     $currentSite = Craft::$app->sites->getCurrentSite();
+    //     $criteria['siteId'] = $currentSite->id;
+    //     $fabPermission = FabPermissionRecord::findOne($criteria);
+
+    //     return (empty($fabPermission) ? null : $fabPermission->getAttribute('permission'));
+    // }
+
+    public function getPermissions($criteria = []) : array
     {
         $currentSite = Craft::$app->sites->getCurrentSite();
         $criteria['siteId'] = $currentSite->id;
-        $fabPermission = FabPermissionRecord::findOne($criteria);
+        $fabPermissions = FabPermissionRecord::findAll($criteria);
 
-        return (empty($fabPermission) ? null : $fabPermission->getAttribute('permission'));
-    }
-
-    public function processCpEntriesVariables(array $variables) : array
-    {
-        if( empty($variables['entryType']) || empty($variables['entry']) ) return $variables;
-
-        $variables['tabs'] = [];
-        $user = Craft::$app->getUser();
-
-        // Loop the tabs and filter based on the current logged in user
-        foreach ($variables['entryType']->getFieldLayout()->getTabs() as $index => $tab) {
-            // Do any of the fields on this tab have errors?
-            $hasErrors = false;
-
-            if ($variables['entry']->hasErrors()) {
-                foreach ($tab->getFields() as $field) {
-                    /** @var Field $field */
-                    if ($hasErrors = $variables['entry']->hasErrors($field->handle . '.*')) {
-                        break;
-                    }
-                }
-            }
-
-            // Check if this user has permissions to view this tab
-            if( $this->hasTabPermission($tab, $user) ){
-                $variables['tabs'][] = [
-                    'label' => Craft::t('site', $tab->name),
-                    'url' => '#' . $tab->getHtmlId(),
-                    'class' => $hasErrors ? 'error' : null
-                ];
-            }
-        }
-
-        return $variables;
+        return (empty($fabPermissions) ? [] : $fabPermissions);
     }
 
     /**
@@ -123,11 +99,6 @@ class Fab extends Component
             foreach ($postData as $tabName => $permissions) {
 
                 if( urldecode($tabName) !== $tab->name ) continue;
-
-                // FabPermissionRecord::deleteAll([
-                //     'layoutId' => $layout->id,
-                //     'tabId' => $tab->id
-                // ]);
 
                 foreach ($permissions as $handle => $value) {
                     $fabPermissionsData[] = [

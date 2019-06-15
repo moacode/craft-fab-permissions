@@ -31,4 +31,15 @@ class FabPermissions extends ActiveRecord
     {
         return '{{%'.self::TABLE_NAME.'}}';
     }
+
+    public function getUserGroup()
+    {
+        $userGroupService = Craft::$app->getUserGroups();
+        return $userGroupService->getGroupById($this->userGroupId);
+    }
+
+    public function hasPermission()
+    {
+        return (bool) $this->permission;
+    }
 }

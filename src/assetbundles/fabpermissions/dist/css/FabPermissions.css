@@ -10,3 +10,10 @@
  * @since     1.0.0
  */
 .icon.users:before { content: 'users'; }
+.fab-spinner {
+    background-size: 18px;
+    height: 18px;
+}
+.fab-inline {
+	display: inline-block;
+}

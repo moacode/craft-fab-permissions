@@ -1,7 +1,6 @@
 <?php
 /**
- * Control Panel Permissions plugin for Craft CMS 3.x
- *
+ * Field and Tab (Fab) Permissions plugin for Craft CMS 3.x
  * A plugin that allows admins to set tab and field restrictions for particular user groups in the system. For example, an admin could create a tabbed section that only they could see when creating entries.
  *
  * @link      https://joshsmith.dev
@@ -67,29 +66,14 @@ class FabPermissions extends Plugin
     // Public Methods
     // =========================================================================
 
-    /**
-     * Set our $plugin static property to this class so that it can be accessed via
-     * FabPermissions::$plugin
-     *
-     * Called after the plugin class is instantiated; do any one-time initialization
-     * here such as hooks and events.
-     *
-     * If you have a '/vendor/autoload.php' file, it will be loaded for you automatically;
-     * you do not need to load it in your init() method.
-     *
-     */
     public function init()
     {
         parent::init();
         self::$plugin = $this;
 
+        $this->registerAssetBundles();
         $this->registerComponents();
         $this->handleEvents();
-
-        $request = Craft::$app->getRequest();
-        if( $request->getIsCpRequest() ){
-            FabPermissionsAsset::register(Craft::$app->view); // register asset bundle
-        }
 
         Craft::info(
             Craft::t(
@@ -104,10 +88,28 @@ class FabPermissions extends Plugin
     // Protected Methods
     // =========================================================================
 
+    protected function registerAssetBundles()
+    {
+        // register anasset bundle on Control Panel requests
+        $request = Craft::$app->getRequest();
+        if( $request->getIsCpRequest() ){
+            FabPermissionsAsset::register(Craft::$app->view);
+        }
+    }
+
     protected function registerComponents()
     {
-        $this->setComponents([
-            'fabService' => FabService::class
+        // $this->setComponents([
+
+        // ]);
+        // Override the Craft Fields service with our own one.
+        // Note: I don't like overriding core components, but in this case it was the only way to tap into
+        // the fields being returned by the service, and it seemed the "cleanest" approach.
+        Craft::$app->setComponents([
+            'fabService' => FabService::class,
+            'fields' => [
+                'class' => 'thejoshsmith\fabpermissions\services\Fields'
+            ]
         ]);
     }
 
@@ -124,49 +126,12 @@ class FabPermissions extends Plugin
             }
         );
 
-        // Extend the CP template to override the tabs template with our modified version
-        Event::on(
-            View::class,
-            View::EVENT_REGISTER_CP_TEMPLATE_ROOTS,
-            function (RegisterTemplateRootsEvent $e) {
-                if (is_dir($baseDir = $this->getBasePath().DIRECTORY_SEPARATOR.'templates')) {
-                    $e->roots[$this->id] = $baseDir;
-                }
-            }
-        );
-
         // Process the saving of permisisons on tabs and fields
         Event::on(
             Fields::class,
             Fields::EVENT_AFTER_SAVE_FIELD_LAYOUT,
             function(FieldLayoutEvent $event) {
                 $this->fabService->saveFieldLayoutPermissions($event->layout);
-            }
-        );
-
-        Event::on(
-            View::class,
-            View::EVENT_BEFORE_RENDER_TEMPLATE,
-            function(TemplateEvent $event) {
-
-                // $view = Craft::$app->getView();
-                // if( $view->getTemplateMode() === $view::TEMPLATE_MODE_CP ){
-                //     $event->variables = $this->fabService->processCpEntriesVariables($event->variables);
-                // }
-// echo '<pre> $event->template: '; print_r($event->template); echo '</pre>'; die();
-                // if( $event->template === "settings/sections/_entrytypes/edit" ){
-                //     // $view->setTemplatesPath('');
-                // }
-
-                switch ($event->template) {
-                    case '_includes/tabs':
-                    case 'entries/_edit':
-                        $event->variables = $this->fabService->processCpEntriesVariables($event->variables);
-                        break;
-
-                    default:
-                        break;
-                }
             }
         );
     }
