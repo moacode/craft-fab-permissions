@@ -2,7 +2,7 @@
     "name": "thejoshsmith/craft-fab-permissions",
     "description": "Give yourself better control over your sections and fields with Craft Field and Tab Permissions. Restrict which tabs and fields are visible to different user groups.",
     "type": "craft-plugin",
-    "version": "1.0.0",
+    "version": "1.0.0-b.1",
     "keywords": [
         "craft",
         "cms",
@@ -12,8 +12,8 @@
         "tab permissions"
     ],
     "support": {
-        "docs": "???",
-        "issues": "???"
+        "docs": "https://gitlab.com/thejoshsmith/craft-fab-permissions/blob/master/README.md",
+        "issues": "https://gitlab.com/thejoshsmith/craft-fab-permissions/issues"
     },
     "license": "MIT",
     "authors": [
@@ -35,7 +35,7 @@
         "handle": "craft-fab-permissions",
         "hasCpSettings": false,
         "hasCpSection": false,
-        "changelogUrl": "???",
+        "changelogUrl": "https://gitlab.com/thejoshsmith/craft-fab-permissions/blob/master/CHANGELOG.md",
         "components": {
             "fabPermissionsService": "thejoshsmith\\fabpermissions\\services\\fab"
         },
