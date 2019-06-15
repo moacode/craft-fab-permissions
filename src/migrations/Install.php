@@ -19,7 +19,7 @@ use craft\db\Migration;
  * If you need to perform any additional actions on install/uninstall, override the
  * safeUp() and safeDown() methods.
  *
- * @author    Josh Smith <josh.smith@platocreative.co.nz>
+ * @author    Josh Smith <me@joshsmith.dev>
  * @package   FabPermissions
  * @since     1.0.0
  */

@@ -17,14 +17,6 @@ class FabPermissions extends ActiveRecord
 
      /**
      * Declares the name of the database table associated with this AR class.
-     * By default this method returns the class name as the table name by calling [[Inflector::camel2id()]]
-     * with prefix [[Connection::tablePrefix]]. For example if [[Connection::tablePrefix]] is `tbl_`,
-     * `Customer` becomes `tbl_customer`, and `OrderItem` becomes `tbl_order_item`. You may override this method
-     * if the table is not named after this convention.
-     *
-     * By convention, tables created by plugins should be prefixed with the plugin
-     * name and an underscore.
-     *
      * @return string the table name
      */
     public static function tableName()
@@ -32,12 +24,22 @@ class FabPermissions extends ActiveRecord
         return '{{%'.self::TABLE_NAME.'}}';
     }
 
+    /**
+     * Returns the associated user group
+     * @author Josh Smith <me@joshsmith.dev>
+     * @return UserGroup
+     */
     public function getUserGroup()
     {
         $userGroupService = Craft::$app->getUserGroups();
         return $userGroupService->getGroupById($this->userGroupId);
     }
 
+    /**
+     * Returns the associated permission
+     * @author Josh Smith <me@joshsmith.dev>
+     * @return boolean
+     */
     public function hasPermission()
     {
         return (bool) $this->permission;

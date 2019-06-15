@@ -5,8 +5,7 @@ namespace thejoshsmith\fabpermissions\controllers;
 use thejoshsmith\fabpermissions\FabPermissions;
 
 use Craft;
-use yii\rest\Controller;
-use yii\web\HttpException;
+use craft\web\Controller;
 
 /**
  * Fab Permissions Controller
@@ -19,7 +18,7 @@ class FabPermissionsController extends Controller
 {
     /**
      * Returns a list of user groups
-     * @author Josh Smith <josh.smith@platocreative.co.nz>
+     * @author Josh Smith <me@joshsmith.dev>
      * @return array
      */
     public function actionGetUserGroups()
@@ -28,26 +27,28 @@ class FabPermissionsController extends Controller
         $userGroupsService = Craft::$app->getUserGroups();
         $groups = $userGroupsService->getAllGroups();
 
-        return ['data' =>  ['userGroups' => $groups]];
+        return $this->asJson(['data' =>  ['userGroups' => $groups]]);
     }
 
     /**
      * Returns a list of tabs and fields with user group permissions
-     * @author Josh Smith <josh.smith@platocreative.co.nz>
+     * @author Josh Smith <me@joshsmith.dev>
      * @return array
      */
     public function actionGetFieldAndTabPermissions()
     {
+        $this->requirePostRequest();
+
         $request = Craft::$app->getRequest();
         $layoutId = $request->post('fieldLayoutId');
 
         if( empty($layoutId) ){
-            return [
+            return $this->asJson([
                 'data' => [
                     'tabs' => [],
                     'fields' => []
                 ]
-            ];
+            ]);
         }
 
         // Fetch the layout
@@ -84,11 +85,11 @@ class FabPermissionsController extends Controller
             $fieldsData[$permission->fieldId][$userGroupHandle] = $permission->hasPermission();
         }
 
-        return [
+        return $this->asJson([
             'data' => [
                 'tabs' => $tabsData,
                 'fields' => $fieldsData
             ]
-        ];
+        ]);
     }
 }

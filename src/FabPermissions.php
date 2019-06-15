@@ -16,29 +16,20 @@ use craft\base\Plugin;
 use craft\services\Plugins;
 use craft\events\PluginEvent;
 use craft\events\FieldLayoutEvent;
-use craft\events\TemplateEvent;
-use craft\events\RegisterTemplateRootsEvent;
-use craft\web\View;
 use craft\services\Fields;
 use thejoshsmith\fabpermissions\assetbundles\fabpermissions\FabPermissionsAsset;
 
 use yii\base\Event;
 
 /**
- * Craft plugins are very much like little applications in and of themselves. We’ve made
- * it as simple as we can, but the training wheels are off. A little prior knowledge is
- * going to be required to write a plugin.
- *
- * For the purposes of the plugin docs, we’re going to assume that you know PHP and SQL,
- * as well as some semi-advanced concepts like object-oriented programming and PHP namespaces.
- *
- * https://craftcms.com/docs/plugins/introduction
+ * Fab Permissions Plugin
+ * Allows the setting of user group permissions on tabs and fields wherever the Field Layout Designer is present.
+ * Permissions are applied across multiple sites by default.
  *
  * @author    Josh Smith
  * @package   FabPermissions
  * @since     1.0.0
  *
- * @property  FabService $fabPermissionsService
  */
 class FabPermissions extends Plugin
 {
@@ -71,6 +62,7 @@ class FabPermissions extends Plugin
         parent::init();
         self::$plugin = $this;
 
+        // Bootstrap this plugin
         $this->registerAssetBundles();
         $this->registerComponents();
         $this->handleEvents();
@@ -88,6 +80,11 @@ class FabPermissions extends Plugin
     // Protected Methods
     // =========================================================================
 
+    /**
+     * Registers asset bundles for the Control Panel
+     * @author Josh Smith <me@joshsmith.dev>
+     * @return void
+     */
     protected function registerAssetBundles()
     {
         // register anasset bundle on Control Panel requests
@@ -97,11 +94,13 @@ class FabPermissions extends Plugin
         }
     }
 
+    /**
+     * Registers Plugin Components
+     * @author Josh Smith <me@joshsmith.dev>
+     * @return void
+     */
     protected function registerComponents()
     {
-        // $this->setComponents([
-
-        // ]);
         // Override the Craft Fields service with our own one.
         // Note: I don't like overriding core components, but in this case it was the only way to tap into
         // the fields being returned by the service, and it seemed the "cleanest" approach.
@@ -113,19 +112,13 @@ class FabPermissions extends Plugin
         ]);
     }
 
+    /**
+     * Attach event handlers
+     * @author Josh Smith <me@joshsmith.dev>
+     * @return void
+     */
     protected function handleEvents()
     {
-        // Do something after we're installed
-        Event::on(
-            Plugins::class,
-            Plugins::EVENT_AFTER_INSTALL_PLUGIN,
-            function (PluginEvent $event) {
-                if ($event->plugin === $this) {
-                    // We were just installed
-                }
-            }
-        );
-
         // Process the saving of permisisons on tabs and fields
         Event::on(
             Fields::class,

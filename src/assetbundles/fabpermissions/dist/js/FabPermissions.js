@@ -22,8 +22,6 @@ var FabPermissions;
 Craft.FabPermissions = Garnish.Base.extend({
 
 	$el: null,
-	$tabs: null,
-	$fields: null,
 	data : {
 		tabs: [],
 		fields: []
@@ -498,7 +496,7 @@ Craft.FieldLayoutDesigner.prototype.renameTab = function($tab) {
  * @param  {object} $tab jQuery collection
  */
 Craft.FieldLayoutDesigner.prototype.setPermissionsTab = function($tab){
-	new Craft.TabUserPermissionSelectorModal({$el: $tab});
+	new Craft.TabUserPermissionSelectorModal({$el: $tab, type: 'tab'});
 };
 
 /**
@@ -554,7 +552,7 @@ Craft.FieldLayoutDesigner.prototype.onFieldOptionSelect = function(option) {
  * @param  {object} $field jQuery collection
  */
 Craft.FieldLayoutDesigner.prototype.setPermissionsField = function($field){
-	new Craft.FieldUserPermissionSelectorModal({$el: $field});
+	new Craft.FieldUserPermissionSelectorModal({$el: $field, type: 'field'});
 };
 
 /**
@@ -564,6 +562,8 @@ Craft.FieldLayoutDesigner.prototype.setPermissionsField = function($field){
 Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 
 	settings: {},
+	closeOtherModals: true,
+	shadeClass: 'modal-shade dark',
 	userGroups: [],
 	$form : $(),
 	$submitBtn: $(),
@@ -586,7 +586,7 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 	    var $body = $(
 	        '<div class="body">' +
 	        	'<div class="content-summary">' +
-	        		'<p>' + Craft.t('app', 'Choose which user groups have access to this tab') + '</p>' +
+	        		'<p>' + Craft.t('app', 'Choose which user groups have access to this '+this.settings.type) + '</p>' +
 	        	'</div>' +
 	        	'<div class="options">' +
 	        		'<div class="spinner"/>' +
@@ -595,13 +595,16 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 	    ).appendTo(this.$form),
 
 	    $footer = $('<div class="hud-footer"/>').appendTo(this.$form),
-	    $buttons = $('<div class="buttons right"/>').appendTo($footer),
-	    $cancelBtn = $('<div class="btn">' + Craft.t('app', 'Cancel') + '</div>').appendTo($buttons);
+	    $secondaryButtons = $('<div class="left secondary-buttons fab-my-0"></div>').appendTo($footer),
+	    $buttons = $('<div class="buttons right fab-my-0"/>').appendTo($footer),
+	    $cancelBtn = $('<div class="btn">' + Craft.t('app', 'Cancel') + '</div>').appendTo($buttons),
+	    $clearBtn = $('<div data-icon-after="trash" class="btn submit">'+ Craft.t('app', 'Clear') +'</div>').appendTo($secondaryButtons);
 
 	    // Define the submit button
 	    this.$submitBtn = $('<input type="submit" class="btn submit" value="' + Craft.t('app', 'Save') + '" />').appendTo($buttons);
 
 	    // Add event listeners
+		this.addListener($clearBtn, 'click', 'clearPermissions');
 	    this.addListener($cancelBtn, 'click', 'hide');
 		this.addListener(this.$form, 'submit', 'handleSubmit');
 
@@ -644,6 +647,10 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 	}
 });
 
+/**
+ * Extends the base user permissions modal specific for tabs
+ * @author Josh Smith <josh.smith@platocreative.co.nz>
+ */
 Craft.TabUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.extend({
 
 	/**
@@ -675,9 +682,25 @@ Craft.TabUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.ext
 		FabPermissions.showFabIcon(self.settings.$el.find('.tab'));
 
 		return this.hide();
+	},
+
+	/**
+	 * Clears selected permissions
+	 * @author Josh Smith <josh.smith@platocreative.co.nz>
+	 * @param  {object} e Event object
+	 * @return {void}
+	 */
+	clearPermissions: function(e){
+		FabPermissions.removeTabInputs(this.settings.$el);
+		FabPermissions.hideFabIcon(this.settings.$el);
+		this.hide();
 	}
 });
 
+/**
+ * Extends the base user permissions modal specific for fields
+ * @author Josh Smith <josh.smith@platocreative.co.nz>
+ */
 Craft.FieldUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.extend({
 
 	/**
@@ -711,6 +734,25 @@ Craft.FieldUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.e
 		return this.hide();
 	},
 
+	/**
+	 * Clears selected permissions
+	 * @author Josh Smith <josh.smith@platocreative.co.nz>
+	 * @param  {object} e Event object
+	 * @return {void}
+	 */
+	clearPermissions: function(e){
+		FabPermissions.removeFieldInputs(this.settings.$el);
+		FabPermissions.hideFabIcon(this.settings.$el);
+		this.hide();
+	},
+
+	/**
+	 * Returns whether a field permission is set
+	 * @author Josh Smith <josh.smith@platocreative.co.nz>
+	 * @param  {object}  $el    jQuery collection
+	 * @param  {string}  handle User group handle
+	 * @return {Boolean}
+	 */
 	_isPermissionSet: function($el, handle){
 		return FabPermissions.isFieldPermissionSet($el, handle);
 	}

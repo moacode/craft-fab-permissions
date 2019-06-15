@@ -29,7 +29,7 @@ class Fab extends Component
 {
     /**
      * Returns Fab Permission records matching the passed criteria
-     * @author Josh Smith <josh.smith@platocreative.co.nz>
+     * @author Josh Smith <me@joshsmith.dev>
      * @param  array  $criteria An array of criteria filters
      * @return array
      */
@@ -44,7 +44,7 @@ class Fab extends Component
 
     /**
      * Returns whether the passed user has permission to view the passed tab for the current site.
-     * @author Josh Smith <josh.smith@platocreative.co.nz>
+     * @author Josh Smith <me@joshsmith.dev>
      * @param  FieldLayoutTab $tab         Tab object
      * @param  User           $user        User object
      * @param  Site           $currentSite Site object
@@ -78,7 +78,7 @@ class Fab extends Component
 
     /**
      * Returns whether the passed user has permission to view the passed field for the current site
-     * @author Josh Smith <josh.smith@platocreative.co.nz>
+     * @author Josh Smith <me@joshsmith.dev>
      * @param  int     $layoutId    Layout ID
      * @param  Field   $field       Field object
      * @param  User    $user        User object
@@ -113,7 +113,7 @@ class Fab extends Component
 
     /**
      * Saves permissions from the passed field layout object
-     * @author Josh Smith <josh.smith@platocreative.co.nz>
+     * @author Josh Smith <me@joshsmith.dev>
      * @param  FieldLayout $layout Field layout object
      * @return void
      */
