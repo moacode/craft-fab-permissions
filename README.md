@@ -1,6 +1,6 @@
-# Control Panel Permissions plugin for Craft CMS 3.x
+# Field and Tab Permissions plugin for Craft CMS 3.x
 
-A plugin that allows admins to set tab and field restrictions for particular user groups in the system. For example, an admin could create a tabbed section that only they could see when creating entries.
+A plugin that allows you to set field and tab visibility for particular user groups in the CMS. 
 
 ![Screenshot](resources/img/plugin-logo.png)
 
@@ -18,23 +18,50 @@ To install the plugin, follow these instructions.
 
 2. Then tell Composer to load the plugin:
 
-        composer require /control-panel-permissions
+        composer require thejoshsmith/craft-fab-permissions
 
-3. In the Control Panel, go to Settings → Plugins and click the “Install” button for Control Panel Permissions.
+3. In the Control Panel, go to Settings → Plugins and click the “Install” button for FAB Permissions.
 
-## Control Panel Permissions Overview
+## FAB Permissions Overview
 
--Insert text here-
+This plugin allows you to restrict access to certain user groups on a per tab or field basis. 
 
-## Configuring Control Panel Permissions
+A use case for this would be if you had an SEO tab that only digital marketers and developers should be able to access. You can turn off access to client users whilst keeping access for the marketers and developers—The SEO tab will remain hidden to clients but visible for marketers and developers.
 
--Insert text here-
+You can alter permissions for any element that uses the core field layout designer. This includes, but isn't limited to:
 
-## Using Control Panel Permissions
++ Entry Types
++ Globals
++ Users
++ Assets
++ Categories
++ Tags
 
--Insert text here-
+## How does it work?
 
-## Control Panel Permissions Roadmap
+The plugin extends the core field and layout designer javascript object, and injects hidden inputs with user group permissons. Once permissions are saved in the database, an extended fields service is able to filter out fields and tabs based on the logged in user and their access.
+
+Great care has been taken to ensure the bare minimum of core functionality has been extended, but you should note that the fields service is replaced with a minimal extended version for the field and tab filtering.
+
+## Using FAB Permissions
+
+1. After installing the plugin, a new menu item will be available from the settings menu on any field layout:
+
+![Field and Layout Designer](resources/img/step-1-field-and-layout-designer.png)
+
+2. Clicking the menu item will bring up the permissions modal. Check the user groups you'd like to give access to, and click save. In this case, only admins will be able to access the SEO tab.
+
+![Permissions Modal](resources/img/step-2-set-permissions-in-modal.png)
+
+3. A red dot is now shown in the tab, indicating permissions have been set.
+
+![Red Dot Indication](resources/img/step-3-dot-indicator.png)
+
+4. Client users no longer have access to the SEO tab.
+
+![SEO Tab Restricted](resources/img/step-4-tabs-are-restricted.png)
+
+## FAB Permissions Roadmap
 
 Some things to do, and ideas for potential features:
 
