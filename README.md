@@ -1,6 +1,6 @@
 # Field and Tab Permissions plugin for Craft CMS 3.x
 
-A plugin that allows you to set field and tab visibility for particular user groups in the CMS. 
+A plugin that allows you to set field and tab visibility for particular user groups in the CMS.
 
 ![Screenshot](resources/img/plugin-logo.png)
 
@@ -24,7 +24,7 @@ To install the plugin, follow these instructions.
 
 ## FAB Permissions Overview
 
-This plugin allows you to restrict access to certain user groups on a per tab or field basis. 
+This plugin allows you to restrict access to certain user groups on a per tab or field basis.
 
 A use case for this would be if you had an SEO tab that only digital marketers and developers should be able to access. You can turn off access to client users whilst keeping access for the marketers and developers—The SEO tab will remain hidden to clients but visible for marketers and developers.
 
@@ -49,7 +49,7 @@ Great care has been taken to ensure the bare minimum of core functionality has b
 
 ![Field and Layout Designer](resources/img/step-1-field-and-layout-designer.png)
 
-2. Clicking the menu item will bring up the permissions modal. Check the user groups you'd like to give access to, and click save. In this case, only admins will be able to access the SEO tab.
+2. Clicking the menu item will bring up the permissions modal. Check the user groups you'd like to give access to, and click save. In this screenshot, only Developers and Digital Marketers will be able to access the SEO tab.
 
 ![Permissions Modal](resources/img/step-2-set-permissions-in-modal.png)
 
