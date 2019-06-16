@@ -12,8 +12,8 @@
         "tab permissions"
     ],
     "support": {
-        "docs": "https://gitlab.com/thejoshsmith/craft-fab-permissions/blob/master/README.md",
-        "issues": "https://gitlab.com/thejoshsmith/craft-fab-permissions/issues"
+        "docs": "https://github.com/thejoshsmith/craft-fab-permissions/blob/master/README.md",
+        "issues": "https://github.com/thejoshsmith/craft-fab-permissions/issues"
     },
     "license": "proprietary",
     "authors": [
@@ -35,7 +35,7 @@
         "handle": "craft-fab-permissions",
         "hasCpSettings": false,
         "hasCpSection": false,
-        "changelogUrl": "https://gitlab.com/thejoshsmith/craft-fab-permissions/blob/master/CHANGELOG.md",
+        "changelogUrl": "https://github.com/thejoshsmith/craft-fab-permissions/blob/master/CHANGELOG.md",
         "components": {
             "fabPermissionsService": "thejoshsmith\\fabpermissions\\services\\fab"
         },
