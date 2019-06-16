@@ -57,7 +57,7 @@ Great care has been taken to ensure the bare minimum of core functionality has b
 
 ![Red Dot Indication](resources/img/step-3-dot-indicator.png)
 
-4. Clients and Account Manangers no longer have access to the SEO tab.
+4. Clients and Account Managers no longer have access to the SEO tab.
 
 ![SEO Tab Restricted](resources/img/step-4-tabs-are-restricted.png)
 

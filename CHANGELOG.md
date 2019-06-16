@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ## 1.0.2 - 2019-06-16
 ### Modified
 - Updated README.md to correct tab example
+- Fixed a spelling mistake in README.md
 
 ## 1.0.1 - 2019-06-16
 ### Removed
