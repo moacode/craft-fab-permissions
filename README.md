@@ -57,14 +57,28 @@ Great care has been taken to ensure the bare minimum of core functionality has b
 
 ![Red Dot Indication](resources/img/step-3-dot-indicator.png)
 
-4. Client users no longer have access to the SEO tab.
+4. Clients and Account Manangers no longer have access to the SEO tab.
 
 ![SEO Tab Restricted](resources/img/step-4-tabs-are-restricted.png)
+
+5. Fields can be restricted in the same way:
+
+![Set Field Permissions Menu](resources/img/step-5-set-permissions-menu.png)
+
+![Set Field Permissions Modal](resources/img/step-5-set-permissions.png)
+
+![Field Permissions Dot Indicator](resources/img/step-5-dot-indicator.png)
+
+![Field Restricted For Users](resources/img/step-5-no-access-to-field.png)
+
+6. Permissions can be cleared using the "Clear" button on the permissions modal:
+
+![Field Restricted For Users](resources/img/step-6-clear-permissions.png)
 
 ## FAB Permissions Roadmap
 
 Some things to do, and ideas for potential features:
 
-* Release it
+* Page that shows permissions set across all tabs/fields in the CMS
 
 Brought to you by [Josh Smith](https://joshsmith.dev)
