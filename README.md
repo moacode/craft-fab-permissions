@@ -80,5 +80,6 @@ Great care has been taken to ensure the bare minimum of core functionality has b
 Some things to do, and ideas for potential features:
 
 * Page that shows permissions set across all tabs/fields in the CMS
+* Ability to set permissions on an individual user basis.
 
 Brought to you by [Josh Smith](https://joshsmith.dev)
