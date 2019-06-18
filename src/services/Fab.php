@@ -16,6 +16,7 @@ use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
 use craft\base\Field;
 use craft\web\User;
+use yii\base\Exception;
 
 use thejoshsmith\fabpermissions\records\FabPermissions as FabPermissionRecord;
 
@@ -27,6 +28,12 @@ use thejoshsmith\fabpermissions\records\FabPermissions as FabPermissionRecord;
  */
 class Fab extends Component
 {
+    /**
+     * Define the admin permission handle
+     * @var string
+     */
+    public static $adminPermissionHandle = 'admin';
+
     /**
      * Returns Fab Permission records matching the passed criteria
      * @author Josh Smith <me@joshsmith.dev>
@@ -136,13 +143,19 @@ class Fab extends Component
 
                 if( urldecode($tabName) !== $tab->name ) continue;
 
+                // Fetch the user group ID
                 foreach ($permissions as $handle => $value) {
+
+                    // Detect the User Group Id
+                    $userGroupId = $this->getUserGroupIdFromHandle($handle);
+                    $value = $userGroupId === null ? '1' : $value;
+
                     $fabPermissionsData[] = [
                         $layout->id,
                         $tab->id,
                         null,
                         $currentSite->id,
-                        Craft::$app->getUserGroups()->getGroupByHandle($handle)->id,
+                        $userGroupId,
                         $value
                     ];
                 }
@@ -152,12 +165,17 @@ class Fab extends Component
         // Loop field permissions and work out permissions
         foreach ($fieldPermissions as $fieldId => $permissions) {
             foreach ($permissions as $handle => $value) {
+
+                // Detect the User Group Id
+                $userGroupId = $this->getUserGroupIdFromHandle($handle);
+                $value = $userGroupId === null ? '1' : $value;
+
                 $fabPermissionsData[] = [
                     $layout->id,
                     null,
                     $fieldId,
                     $currentSite->id,
-                    Craft::$app->getUserGroups()->getGroupByHandle($handle)->id,
+                    $userGroupId,
                     $value
                 ];
             }
@@ -179,5 +197,23 @@ class Fab extends Component
         if( !empty($fabPermissionsData) ){
             Craft::$app->db->createCommand()->batchInsert(FabPermissionRecord::tableName(), $fields, $fabPermissionsData)->execute();
         }
+    }
+
+    /**
+     * Returns the user group ID from the passed handle
+     * @author Josh Smith <me@joshsmith.dev>
+     * @param  string $handle User group handle
+     * @return integer
+     */
+    public function getUserGroupIdFromHandle($handle)
+    {
+        // Admin handle is special, and is inserted as a null value
+        if( $handle === self::$adminPermissionHandle ) return $groupHandleId = null;
+
+        // Fetch the user group
+        $group = Craft::$app->getUserGroups()->getGroupByHandle($handle);
+        if( empty($group) ) throw new Exception('Invalid user group handle.');
+
+        return $group->id;
     }
 }

@@ -41,6 +41,7 @@ class FabPermissionsController extends Controller
 
         $request = Craft::$app->getRequest();
         $layoutId = $request->post('fieldLayoutId');
+        $fabService = FabPermissions::$plugin->fabService;
 
         if( empty($layoutId) ){
             return $this->asJson([
@@ -61,27 +62,27 @@ class FabPermissionsController extends Controller
             $tabsData[urlencode($tab->name)] = [];
 
             // Fetch permissions for this tab
-            $tabPermissions = FabPermissions::$plugin->fabService->getPermissions([
+            $tabPermissions = $fabService->getPermissions([
                 'layoutId' => $layoutId,
                 'tabId' => $tab->id
             ]);
 
             // Loop permission records and assign to tab data
             foreach ($tabPermissions as $permission) {
-                $userGroupHandle = $permission->getUserGroup()->handle;
+                $userGroupHandle = (is_null($permission->userGroupId) ? $fabService::$adminPermissionHandle : $permission->getUserGroup()->handle);
                 $tabsData[$tab->name][$userGroupHandle] = $permission->hasPermission();
             }
         }
 
         $fieldsData = [];
-        $fieldPermissions = FabPermissions::$plugin->fabService->getPermissions([
+        $fieldPermissions = $fabService->getPermissions([
             'layoutId' => $layoutId,
             'tabId' => null
         ]);
 
         // Loop permission records and assign to tab data
         foreach ($fieldPermissions as $permission) {
-            $userGroupHandle = $permission->getUserGroup()->handle;
+            $userGroupHandle = (is_null($permission->userGroupId) ? $fabService::$adminPermissionHandle : $permission->getUserGroup()->handle);
             $fieldsData[$permission->fieldId][$userGroupHandle] = $permission->hasPermission();
         }
 

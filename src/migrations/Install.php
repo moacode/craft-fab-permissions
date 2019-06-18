@@ -101,7 +101,7 @@ class Install extends Migration
                     'tabId' => $this->integer(),
                     'fieldId' => $this->integer(),
                     'siteId' => $this->integer()->notNull(),
-                    'userGroupId' => $this->integer()->notNull(),
+                    'userGroupId' => $this->integer()->null(),
                     'permission' => $this->boolean()->notNull(),
                     'dateCreated' => $this->dateTime()->notNull(),
                     'dateUpdated' => $this->dateTime()->notNull(),

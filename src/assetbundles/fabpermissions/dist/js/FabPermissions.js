@@ -630,7 +630,7 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 			$options = this.$form.find('.options');
 
 		// Set a default admin permissions checkbox.
-		$options.html('<label class="disabled"><input type="checkbox" checked disabled/> ' + Craft.t('app', 'Admin') + '</label>');
+		$options.html('<label class="disabled"><input type="checkbox" checked disabled value="admin"/> ' + Craft.t('app', 'Admin') + '</label>');
 
 		// Loop the groups and populate checkboxes
 		userGroups.forEach(function(userGroup){
@@ -672,11 +672,9 @@ Craft.TabUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.ext
 		this.$form.find('.options input[type="checkbox"]').each(function(i, checkbox){
 
 			var $checkbox = $(checkbox);
-			if( !$checkbox.is(':disabled') ){
 
-				// Append the hidden input
-				FabPermissions.addTabInput(self.settings.$el, $checkbox.val(), $checkbox.is(':checked'));
-			}
+			// Append the hidden input
+			FabPermissions.addTabInput(self.settings.$el, $checkbox.val(), $checkbox.is(':checked'));
 		});
 
 		FabPermissions.showFabIcon(self.settings.$el.find('.tab'));
@@ -722,11 +720,9 @@ Craft.FieldUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.e
 		this.$form.find('.options input[type="checkbox"]').each(function(i, checkbox){
 
 			var $checkbox = $(checkbox);
-			if( !$checkbox.is(':disabled') ){
 
-				// Append the hidden input
-				FabPermissions.addFieldInput(self.settings.$el, $checkbox.val(), $checkbox.is(':checked'));
-			}
+			// Append the hidden input
+			FabPermissions.addFieldInput(self.settings.$el, $checkbox.val(), $checkbox.is(':checked'));
 		});
 
 		FabPermissions.showFabIcon(self.settings.$el);
