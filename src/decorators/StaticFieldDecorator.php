@@ -2,12 +2,11 @@
 
 namespace thejoshsmith\fabpermissions\decorators;
 
-use thejoshsmith\fabpermissions\base\Decorator;
-use craft\base\FieldInterface;
+use thejoshsmith\fabpermissions\base\FieldDecorator;
 use craft\base\ElementInterface;
+use craft\base\FieldInterface;
 
-
-class StaticFieldDecorator extends Decorator {
+class StaticFieldDecorator extends FieldDecorator {
 
 	public function __construct(FieldInterface $field)
     {

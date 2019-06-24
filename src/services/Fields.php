@@ -4,6 +4,8 @@ namespace thejoshsmith\fabpermissions\services;
 
 use Craft;
 use craft\services\Fields as CraftFieldsService;
+use craft\base\FieldInterface;
+
 use thejoshsmith\fabpermissions\FabPermissions;
 use thejoshsmith\fabpermissions\decorators\StaticFieldDecorator;
 
@@ -27,12 +29,13 @@ class Fields extends CraftFieldsService
 
         // Check if this user has permissions to view this field
         foreach ($fields as $i => $field) {
-            if( !$fabService->hasFieldPermission($layoutId, $field, $user) ){
+            if( !$fabService->canViewField($layoutId, $field, $user) ){
                 unset($fields[$i]);
+            } else {
+                if( !$fabService->canEditField($layoutId, $field, $user) ){
+                    $fields[$i] = new StaticFieldDecorator($field);
+                }
             }
-            // if( $fabService->isReadOnly($layoutId, $field, $user) ){
-                // $fields[$i] = $field = new StaticFieldDecorator($field);
-            // }
         }
 
         return $fields;
@@ -52,7 +55,7 @@ class Fields extends CraftFieldsService
 
         // Check if this user has permissions to view this tab
         foreach ($tabs as $i => $tab) {
-            if( !$fabService->hasTabPermission($tab, $user) ){
+            if( !$fabService->canViewTab($tab, $user) ){
                 unset($tabs[$i]);
             }
         }

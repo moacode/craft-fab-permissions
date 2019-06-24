@@ -59,7 +59,7 @@ class Fab extends Component
      * @param  Site           $currentSite Site object
      * @return boolean
      */
-    public function hasTabPermission(FieldLayoutTab $tab, User $user, $currentSite = null)
+    public function canViewTab(FieldLayoutTab $tab, User $user, $currentSite = null)
     {
         if( $user->getIsAdmin() ) return true;
         if( $currentSite === null ) $currentSite = Craft::$app->sites->getCurrentSite();
@@ -77,7 +77,7 @@ class Fab extends Component
         // Loop the permissions and determine if the user can see the tab
         foreach ($fabPermissions as $fabPermission) {
             $isUserInGroup = $user->getIdentity()->isInGroup($fabPermission->userGroupId);
-            if( $isUserInGroup && (bool) $fabPermission->permission === true ){
+            if( $isUserInGroup && (bool) $fabPermission->{self::$viewPermissionHandle} === true ){
                 return true;
             }
         }
@@ -94,7 +94,7 @@ class Fab extends Component
      * @param  Site    $currentSite Site object
      * @return boolean
      */
-    public function hasFieldPermission(int $layoutId, Field $field, User $user, $currentSite = null)
+    public function canViewField(int $layoutId, Field $field, User $user, $currentSite = null)
     {
         if( $user->getIsAdmin() ) return true;
         if( $currentSite === null ) $currentSite = Craft::$app->sites->getCurrentSite();
@@ -112,7 +112,42 @@ class Fab extends Component
         // Loop the permissions and determine if the user can see the tab
         foreach ($fabPermissions as $fabPermission) {
             $isUserInGroup = $user->getIdentity()->isInGroup($fabPermission->userGroupId);
-            if( $isUserInGroup && (bool) $fabPermission->permission === true ){
+            if( $isUserInGroup && (bool) $fabPermission->{self::$viewPermissionHandle} === true ){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns whether the passed user has permission to view the passed field for the current site
+     * @author Josh Smith <me@joshsmith.dev>
+     * @param  int     $layoutId    Layout ID
+     * @param  Field   $field       Field object
+     * @param  User    $user        User object
+     * @param  Site    $currentSite Site object
+     * @return boolean
+     */
+    public function canEditField(int $layoutId, Field $field, User $user, $currentSite = null)
+    {
+        if( $user->getIsAdmin() ) return true;
+        if( $currentSite === null ) $currentSite = Craft::$app->sites->getCurrentSite();
+
+         // Fetch permission records
+        $fabPermissions = FabPermissionsRecord::findAll([
+            'layoutId' => $layoutId,
+            'fieldId' => $field->id,
+            'siteId' => $currentSite->id
+        ]);
+
+        // Return true if no permissions have been set on this tab
+        if( empty($fabPermissions) ) return true;
+
+        // Loop the permissions and determine if the user can see the tab
+        foreach ($fabPermissions as $fabPermission) {
+            $isUserInGroup = $user->getIdentity()->isInGroup($fabPermission->userGroupId);
+            if( $isUserInGroup && (bool) $fabPermission->{self::$editPermissionHandle} === true ){
                 return true;
             }
         }
@@ -151,7 +186,7 @@ class Fab extends Component
                     // Detect the User Group Id
                     $userGroupId = $this->getUserGroupIdFromHandle($handle);
                     $canViewValue = ($userGroupId === null ? '1' : $permissions[self::$viewPermissionHandle]);
-                    $canEditValue = ($userGroupId === null ? '1' : $permissions[self::$editPermissionHandle]);
+                    // $canEditValue = ($userGroupId === null ? '1' : $permissions[self::$editPermissionHandle]);
 
                     $fabPermissionsData[] = [
                         $layout->id,
@@ -160,7 +195,8 @@ class Fab extends Component
                         $currentSite->id,
                         $userGroupId,
                         (isset($canViewValue) ? $canViewValue : null),
-                        (isset($canEditValue) ? $canEditValue : null),
+                        null
+                        // (isset($canEditValue) ? $canEditValue : null),
                     ];
                 }
             }

@@ -178,8 +178,10 @@ Craft.FabPermissions = Garnish.Base.extend({
 
 			// Loop the permissions and add hidden inputs
 			for(var userGroupHandle in tabPermissions){
-				var hasPermission = tabPermissions[userGroupHandle];
-				self.addTabInput($tab, userGroupHandle, hasPermission);
+				for(var type in tabPermissions[userGroupHandle]){
+					var hasPermission = tabPermissions[userGroupHandle][type];
+					self.addTabInput($tab, type, userGroupHandle, hasPermission);
+				}
 			}
 		}
 
@@ -207,8 +209,10 @@ Craft.FabPermissions = Garnish.Base.extend({
 
 			// Loop the permissions and add hidden inputs
 			for(var userGroupHandle in fieldPermissions){
-				var hasPermission = fieldPermissions[userGroupHandle];
-				self.addFieldInput($field, userGroupHandle, hasPermission);
+				for(var type in fieldPermissions[userGroupHandle]){
+					var hasPermission = fieldPermissions[userGroupHandle][type];
+					self.addFieldInput($field, type, userGroupHandle, hasPermission);
+				}
 			}
 		}
 
@@ -270,7 +274,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * @param  {string}  handle        User group handle
 	 * @param  {Boolean} hasPermission Whether or not this user group has permissions to view this tab
 	 */
-	addTabInput: function($tab, type,  handle, hasPermission){
+	addTabInput: function($tab, type, handle, hasPermission){
 		$tab.append('<input class="fab-id-input js--fab-tab-input" type="hidden" name="'+this._getFieldInputName($tab)+'['+handle+']['+type+']" value="'+(hasPermission ? '1' : '0')+'">');
 	},
 
@@ -346,7 +350,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 */
 	isPermissionSet: function($tab, type, handle){
 		var $permissions = $tab.find('.fab-id-input');
-		if( ! $permissions.length ) return false;
+		if( ! $permissions.length ) return true;
 
 		var self = this,
 			matchedHandle = false;
@@ -374,7 +378,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 */
 	isFieldPermissionSet: function($field, type, handle){
 		var $permissions = $field.find('.fab-id-input');
-		if( ! $permissions.length ) return false;
+		if( ! $permissions.length ) return true;
 
 		var self = this,
 			matchedHandle = false;
@@ -588,16 +592,13 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 		var $body = $(
 			'<div class="body" style="overflow-y: scroll;">' +
 				'<div class="content-summary">' +
-					'<p style="font-size: 20px;font-weight: bold;">'+(this.settings.type[0].toUpperCase()+this.settings.type.slice(1))+' Permissions</p>' +
+					'<p style="font-size: 20px;font-weight: bold;">'+this.titleFormat(this.settings.type)+' Permissions</p>' +
 					'<p style="padding: 0rem 0 2rem 0;">Choose which user groups have access to this '+this.settings.type+'.</p>' +
 				'</div>' +
 				'<div class="tableview">' +
 					'<table class="data fullwidth js--fab-table">' +
 						'<thead>' +
 							'<tr>' +
-								'<th scope="col" style="min-width: 50%;">User Group(s)</th>' +
-								'<th scope="col">Can View</th>' +
-								'<th scope="col">Can Edit</th>' +
 							'</tr>' +
 						'</thead>' +
 						'<tbody>' +
@@ -606,6 +607,8 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 				'</div>' +
 			'</div>'
 		).appendTo(this.$form),
+
+		$tableHeadings = this.getTableHeadings().appendTo($body.find('thead tr')),
 
 		$footer = $('<div class="footer"/>').appendTo(this.$form),
 		$secondaryButtons = $('<div class="left secondary-buttons fab-my-0"></div>').appendTo($footer),
@@ -625,6 +628,19 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 		this._populateUserGroups(FabPermissions.userGroups);
 
 		this.base(this.$form, settings);
+	},
+
+	titleFormat: function(text){
+		if( typeof text !== 'string' ) return '';
+		return text[0].toUpperCase()+text.slice(1);
+	},
+
+	getTableHeadings: function(){
+		return $(
+			'<th scope="col" style="min-width: 50%;">User Group(s)</th>' +
+			'<th scope="col">Can View</th>' +
+			'<th scope="col">Can Edit</th>'
+		);
 	},
 
 	handleSubmit: function(e){
@@ -757,7 +773,31 @@ Craft.TabUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.ext
 		FabPermissions.removeTabInputs(this.settings.$el);
 		FabPermissions.hideFabIcon(this.settings.$el);
 		this.hide();
-	}
+	},
+
+	getTableHeadings: function(){
+		return $(
+			'<th scope="col">User Group(s)</th>' +
+			'<th scope="col">Can View</th>'
+		);
+	},
+
+	_createTableRow: function(rowData){
+		return $(
+			'<tr>' +
+				'<td>' +
+					'<div class="element small">' +
+						'<div class="label">' +
+							'<span class="title">'+Craft.t('app', rowData.name)+'</span>' +
+						'</div>' +
+					'</div>' +
+				'</td>' +
+				'<td>' +
+					'<input type="checkbox" data-type="canView" '+(rowData.canView.checked ? 'checked="checked"' : '')+' '+(rowData.canView.disabled ? 'disabled="disabled"' : '')+' name="'+rowData.handle+'" value="'+rowData.handle+'"/> ' +
+				'</td>' +
+			'</tr>'
+		);
+	},
 });
 
 /**
