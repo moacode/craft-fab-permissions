@@ -70,7 +70,10 @@ class FabPermissionsController extends Controller
             // Loop permission records and assign to tab data
             foreach ($tabPermissions as $permission) {
                 $userGroupHandle = (is_null($permission->userGroupId) ? $fabService::$adminPermissionHandle : $permission->getUserGroup()->handle);
-                $tabsData[$tab->name][$userGroupHandle] = $permission->hasPermission();
+                $tabsData[$tab->name][$userGroupHandle] = [
+                    $fabService::$viewPermissionHandle => $permission->hasViewPermission(),
+                    $fabService::$editPermissionHandle => $permission->hasEditPermission()
+                ];
             }
         }
 
@@ -83,7 +86,10 @@ class FabPermissionsController extends Controller
         // Loop permission records and assign to tab data
         foreach ($fieldPermissions as $permission) {
             $userGroupHandle = (is_null($permission->userGroupId) ? $fabService::$adminPermissionHandle : $permission->getUserGroup()->handle);
-            $fieldsData[$permission->fieldId][$userGroupHandle] = $permission->hasPermission();
+            $fieldsData[$permission->fieldId][$userGroupHandle] = [
+                $fabService::$viewPermissionHandle => $permission->hasViewPermission(),
+                $fabService::$editPermissionHandle => $permission->hasEditPermission()
+            ];
         }
 
         return $this->asJson([

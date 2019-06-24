@@ -266,11 +266,12 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * Adds a tab hidden input to the DOM
 	 * @author Josh Smith <josh.smith@platocreative.co.nz>
 	 * @param  {object}  $tab          jQuery collection
+	 * * @param  {string}  type        Permission type, either canView or canEdit
 	 * @param  {string}  handle        User group handle
 	 * @param  {Boolean} hasPermission Whether or not this user group has permissions to view this tab
 	 */
-	addTabInput: function($tab, handle, hasPermission){
-		$tab.append('<input class="fab-id-input js--fab-tab-input" type="hidden" name="' + this._getFieldInputName($tab) + '[' + handle + ']" value="'+(hasPermission ? '1' : '0')+'">');
+	addTabInput: function($tab, type,  handle, hasPermission){
+		$tab.append('<input class="fab-id-input js--fab-tab-input" type="hidden" name="'+this._getFieldInputName($tab)+'['+handle+']['+type+']" value="'+(hasPermission ? '1' : '0')+'">');
 	},
 
 	/**
@@ -287,11 +288,12 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * Adds a field hidden input to the DOM
 	 * @author Josh Smith <josh.smith@platocreative.co.nz>
 	 * @param  {object}  $field        jQuery collection
+	 * @param  {string}  type          Permission type, either canView or canEdit
 	 * @param  {string}  handle        User group handle
 	 * @param  {Boolean} hasPermission Whether or not this user group has permissions to view this field
 	 */
-	addFieldInput: function($field, handle, hasPermission){
-		$field.append('<input class="fab-id-input js--fab-field-input" type="hidden" data-id="'+$field.data('id')+'" data-handle="'+handle+'" name="fieldPermissions[' + $field.data('id') + '][' + handle + ']" value="'+(hasPermission ? '1' : '0')+'">');
+	addFieldInput: function($field, type, handle, hasPermission){
+		$field.append('<input class="fab-id-input js--fab-field-input" type="hidden" data-id="'+$field.data('id')+'" data-handle="'+handle+'" data-type="'+type+'" name="fieldPermissions['+$field.data('id')+']['+handle+']['+type+']" value="'+(hasPermission ? '1' : '0')+'">');
 	},
 
 	/**
@@ -311,7 +313,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * @return {string}
 	 */
 	_getFieldInputName: function($tab){
-        return Craft.FieldLayoutDesigner.prototype.getFieldInputName.call(this, this._getTabName($tab));
+		return Craft.FieldLayoutDesigner.prototype.getFieldInputName.call(this, this._getTabName($tab));
 	},
 
 	/**
@@ -338,10 +340,11 @@ Craft.FabPermissions = Garnish.Base.extend({
 	/**
 	 * Returns whether a particular permission is set or not
 	 * @author Josh Smith <josh.smith@platocreative.co.nz>
+	 * @param  {string}  type 	Type of permission to check
 	 * @param  {string}  handle User group handle
 	 * @return {Boolean}
 	 */
-	isPermissionSet: function($tab, handle){
+	isPermissionSet: function($tab, type, handle){
 		var $permissions = $tab.find('.fab-id-input');
 		if( ! $permissions.length ) return false;
 
@@ -352,7 +355,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 		$permissions.each(function(i, input){
 
 			var $input = $(input),
-				regexp = new RegExp(self.escapeRegExp(self._getFieldInputName($tab)+'['+handle+']')),
+				regexp = new RegExp(self.escapeRegExp(self._getFieldInputName($tab)+'['+handle+']['+type+']')),
 				matches = $input.attr('name').match(regexp);
 
 			// Mark this checkbox as checked if it matches the handle and it's marked as selected
@@ -365,10 +368,11 @@ Craft.FabPermissions = Garnish.Base.extend({
 	/**
 	 * Returns whether a particular permission is set or not
 	 * @author Josh Smith <josh.smith@platocreative.co.nz>
+	 * @param  {string}  type 	Type of permission to check
 	 * @param  {string}  handle User group handle
 	 * @return {Boolean}
 	 */
-	isFieldPermissionSet: function($field, handle){
+	isFieldPermissionSet: function($field, type, handle){
 		var $permissions = $field.find('.fab-id-input');
 		if( ! $permissions.length ) return false;
 
@@ -382,6 +386,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 
 			if(
 				$field.data('id') === $input.data('id') &&
+				$input.data('type') === type &&
 				$input.data('handle') === handle &&
 				$input.val() === '1'
 			) matchedHandle = true;
@@ -401,12 +406,12 @@ Craft.FabPermissions = Garnish.Base.extend({
 	}
 },
 {
-    defaults: {
-        contentSummary: [],
-        fieldInputName: 'tabPermissions[__TAB_NAME__]', // Awkwardly named, but kept to utilize the default Craft methods that use this property.
-        onSubmit: $.noop,
-        redirect: null
-    }
+	defaults: {
+		contentSummary: [],
+		fieldInputName: 'tabPermissions[__TAB_NAME__]', // Awkwardly named, but kept to utilize the default Craft methods that use this property.
+		onSubmit: $.noop,
+		redirect: null
+	}
 });
 
 /**
@@ -459,20 +464,20 @@ Craft.FieldLayoutDesigner.prototype.onTabOptionSelect = function(option) {
 	// Call the original method
 	onTabOptionSelect.call(this, option);
 
-    if (!this.settings.customizableTabs) return;
+	if (!this.settings.customizableTabs) return;
 
-    var $option = $(option),
-        $tab = $option.data('menu').$anchor.parent().parent().parent(),
-        action = $option.data('action');
+	var $option = $(option),
+		$tab = $option.data('menu').$anchor.parent().parent().parent(),
+		action = $option.data('action');
 
-    if( $option.hasClass('disabled') ) return;
+	if( $option.hasClass('disabled') ) return;
 
-    switch (action) {
-        case 'setpermissions': {
-            this.setPermissionsTab($tab);
-            break;
-        }
-    }
+	switch (action) {
+		case 'setpermissions': {
+			this.setPermissionsTab($tab);
+			break;
+		}
+	}
 };
 
 /**
@@ -534,16 +539,16 @@ Craft.FieldLayoutDesigner.prototype.onFieldOptionSelect = function(option) {
 	// Call the original method
 	onFieldOptionSelect.call(this, option);
 
-    var $option = $(option),
-        $field = $option.data('menu').$anchor.parent(),
-        action = $option.data('action');
+	var $option = $(option),
+		$field = $option.data('menu').$anchor.parent(),
+		action = $option.data('action');
 
-    switch (action) {
-        case 'setpermissions': {
-            this.setPermissionsField($field);
-            break;
-        }
-    }
+	switch (action) {
+		case 'setpermissions': {
+			this.setPermissionsField($field);
+			break;
+		}
+	}
 };
 
 /**
@@ -575,43 +580,51 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 		this.settings = $.extend({}, Craft.BaseUserPermissionSelectorModal.defaults, settings);
 
 		this.$form = $(
-	        '<form class="modal fitted deleteusermodal" method="post" accept-charset="UTF-8">' +
-	        Craft.getCsrfInput() +
-	        '<input type="hidden" name="action" value="users/delete-user"/>' +
-	        (!Garnish.isArray(this.userId) ? '<input type="hidden" name="userId" value="' + this.userId + '"/>' : '') +
-	        (settings.redirect ? '<input type="hidden" name="redirect" value="' + settings.redirect + '"/>' : '') +
-	        '</form>'
-	    ).appendTo(Garnish.$bod);
+			'<form class="modal elementselectormodal" method="post" accept-charset="UTF-8">' +
+			Craft.getCsrfInput() +
+			'</form>'
+		).appendTo(Garnish.$bod);
 
-	    var $body = $(
-	        '<div class="body">' +
-	        	'<div class="content-summary">' +
-	        		'<p>' + Craft.t('app', 'Choose which user groups have access to this '+this.settings.type) + '</p>' +
-	        	'</div>' +
-	        	'<div class="options">' +
-	        		'<div class="spinner"/>' +
-	        	'</div>' +
-	        '</div>'
-	    ).appendTo(this.$form),
+		var $body = $(
+			'<div class="body" style="overflow-y: scroll;">' +
+				'<div class="content-summary">' +
+					'<p style="font-size: 20px;font-weight: bold;">'+(this.settings.type[0].toUpperCase()+this.settings.type.slice(1))+' Permissions</p>' +
+					'<p style="padding: 0rem 0 2rem 0;">Choose which user groups have access to this '+this.settings.type+'.</p>' +
+				'</div>' +
+				'<div class="tableview">' +
+					'<table class="data fullwidth js--fab-table">' +
+						'<thead>' +
+							'<tr>' +
+								'<th scope="col" style="min-width: 50%;">User Group(s)</th>' +
+								'<th scope="col">Can View</th>' +
+								'<th scope="col">Can Edit</th>' +
+							'</tr>' +
+						'</thead>' +
+						'<tbody>' +
+						'</tbody>' +
+					'</table>' +
+				'</div>' +
+			'</div>'
+		).appendTo(this.$form),
 
-	    $footer = $('<div class="hud-footer"/>').appendTo(this.$form),
-	    $secondaryButtons = $('<div class="left secondary-buttons fab-my-0"></div>').appendTo($footer),
-	    $buttons = $('<div class="buttons right fab-my-0"/>').appendTo($footer),
-	    $cancelBtn = $('<div class="btn">' + Craft.t('app', 'Cancel') + '</div>').appendTo($buttons),
-	    $clearBtn = $('<div data-icon-after="trash" class="btn submit">'+ Craft.t('app', 'Clear') +'</div>').appendTo($secondaryButtons);
+		$footer = $('<div class="footer"/>').appendTo(this.$form),
+		$secondaryButtons = $('<div class="left secondary-buttons fab-my-0"></div>').appendTo($footer),
+		$buttons = $('<div class="buttons right fab-my-0"/>').appendTo($footer),
+		$cancelBtn = $('<div class="btn">' + Craft.t('app', 'Cancel') + '</div>').appendTo($buttons),
+		$clearBtn = $('<div data-icon-after="trash" class="btn submit">'+ Craft.t('app', 'Clear') +'</div>').appendTo($secondaryButtons);
 
-	    // Define the submit button
-	    this.$submitBtn = $('<input type="submit" class="btn submit" value="' + Craft.t('app', 'Save') + '" />').appendTo($buttons);
+		// Define the submit button
+		this.$submitBtn = $('<input type="submit" class="btn submit" value="' + Craft.t('app', 'Save') + '" />').appendTo($buttons);
 
-	    // Add event listeners
+		// Add event listeners
 		this.addListener($clearBtn, 'click', 'clearPermissions');
-	    this.addListener($cancelBtn, 'click', 'hide');
+		this.addListener($cancelBtn, 'click', 'hide');
 		this.addListener(this.$form, 'submit', 'handleSubmit');
 
-	    // Fetch and populate the user group information
-	    this._populateUserGroups(FabPermissions.userGroups);
+		// Fetch and populate the user group information
+		this._populateUserGroups(FabPermissions.userGroups);
 
-	    this.base(this.$form, settings);
+		this.base(this.$form, settings);
 	},
 
 	handleSubmit: function(e){
@@ -627,23 +640,75 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 	_populateUserGroups: function(userGroups){
 
 		var self = this,
-			$options = this.$form.find('.options');
+			$table = this.$form.find('.js--fab-table'),
+			$tableBody = $table.find('tbody');
 
-		// Set a default admin permissions checkbox.
-		$options.html('<label class="disabled"><input type="checkbox" checked disabled value="admin"/> ' + Craft.t('app', 'Admin') + '</label>');
+		// Set a default admin permissions row.
+		$tableBody.append(this._createTableRow({
+			name: 'Admin',
+			handle: 'admin',
+			canView: {
+				checked: true,
+				disabled: true
+			},
+			canEdit: {
+				checked: true,
+				disabled: true
+			}
+		}));
 
 		// Loop the groups and populate checkboxes
 		userGroups.forEach(function(userGroup){
 
 			// Use saved defaults if the user hasn't made changes yet.
-			var isPermissionSet = self._isPermissionSet(self.settings.$el, userGroup.handle);
+			var canView = self._isPermissionSet(self.settings.$el, 'canView', userGroup.handle);
+			var canEdit = self._isPermissionSet(self.settings.$el, 'canEdit', userGroup.handle);
 
-			$options.append('<div><label><input type="checkbox" '+(isPermissionSet ? 'checked="checked"' : '')+' value="'+userGroup.handle+'" name="'+userGroup.handle+'"/> ' + Craft.t('app', userGroup.name) + '</label></div>');
+			// Create a table row and assign click event handlers
+			var $tableRow = self._createTableRow({
+				name: userGroup.name,
+				handle: userGroup.handle,
+				canView: {
+					checked: canView,
+					disabled: false
+				},
+				canEdit: {
+					checked: canEdit,
+					disabled: false
+				}
+			}).on('click', 'input', function(e){
+				e.stopPropagation();
+			}).on('click', 'td', function(e){
+				var $checkbox = $(this).find('input[type="checkbox"]');
+				$checkbox.prop('checked', !$checkbox.prop('checked'));
+			});
+
+			$tableBody.append($tableRow);
 		});
 	},
 
-	_isPermissionSet: function($el, handle){
-		return FabPermissions.isPermissionSet($el, handle);
+	_createTableRow: function(rowData){
+		return $(
+			'<tr>' +
+				'<td>' +
+					'<div class="element small">' +
+						'<div class="label">' +
+							'<span class="title">'+Craft.t('app', rowData.name)+'</span>' +
+						'</div>' +
+					'</div>' +
+				'</td>' +
+				'<td>' +
+					'<input type="checkbox" data-type="canView" '+(rowData.canView.checked ? 'checked="checked"' : '')+' '+(rowData.canView.disabled ? 'disabled="disabled"' : '')+' name="'+rowData.handle+'" value="'+rowData.handle+'"/> ' +
+				'</td>' +
+				'<td>' +
+					'<input type="checkbox" data-type="canEdit" '+(rowData.canEdit.checked ? 'checked="checked"' : '')+' '+(rowData.canEdit.disabled ? 'disabled="disabled"' : '')+' name="'+rowData.handle+'" value="'+rowData.handle+'"/> ' +
+				'</td>' +
+			'</tr>'
+		);
+	},
+
+	_isPermissionSet: function($el, type, handle){
+		return FabPermissions.isPermissionSet($el, type, handle);
 	}
 });
 
@@ -669,12 +734,12 @@ Craft.TabUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.ext
 		var self = this;
 
 		// Loop through each non-disabled checkbox option, and render hidden inputs into the DOM.
-		this.$form.find('.options input[type="checkbox"]').each(function(i, checkbox){
+		this.$form.find('.tableview input[type="checkbox"]').each(function(i, checkbox){
 
 			var $checkbox = $(checkbox);
 
 			// Append the hidden input
-			FabPermissions.addTabInput(self.settings.$el, $checkbox.val(), $checkbox.is(':checked'));
+			FabPermissions.addTabInput(self.settings.$el, $checkbox.data('type'), $checkbox.val(), $checkbox.is(':checked'));
 		});
 
 		FabPermissions.showFabIcon(self.settings.$el.find('.tab'));
@@ -717,12 +782,12 @@ Craft.FieldUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.e
 		var self = this;
 
 		// Loop through each non-disabled checkbox option, and render hidden inputs into the DOM.
-		this.$form.find('.options input[type="checkbox"]').each(function(i, checkbox){
+		this.$form.find('.tableview input[type="checkbox"]').each(function(i, checkbox){
 
 			var $checkbox = $(checkbox);
 
 			// Append the hidden input
-			FabPermissions.addFieldInput(self.settings.$el, $checkbox.val(), $checkbox.is(':checked'));
+			FabPermissions.addFieldInput(self.settings.$el, $checkbox.data('type'), $checkbox.val(), $checkbox.is(':checked'));
 		});
 
 		FabPermissions.showFabIcon(self.settings.$el);
@@ -746,10 +811,11 @@ Craft.FieldUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.e
 	 * Returns whether a field permission is set
 	 * @author Josh Smith <josh.smith@platocreative.co.nz>
 	 * @param  {object}  $el    jQuery collection
+	 * @param  {string}  type 	Type of permission
 	 * @param  {string}  handle User group handle
 	 * @return {Boolean}
 	 */
-	_isPermissionSet: function($el, handle){
-		return FabPermissions.isFieldPermissionSet($el, handle);
+	_isPermissionSet: function($el, type, handle){
+		return FabPermissions.isFieldPermissionSet($el, type, handle);
 	}
 });

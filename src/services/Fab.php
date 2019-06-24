@@ -18,7 +18,7 @@ use craft\base\Field;
 use craft\web\User;
 use yii\base\Exception;
 
-use thejoshsmith\fabpermissions\records\FabPermissions as FabPermissionRecord;
+use thejoshsmith\fabpermissions\records\FabPermissionsRecord;
 
 /**
  * Fab Permissions Service
@@ -29,10 +29,12 @@ use thejoshsmith\fabpermissions\records\FabPermissions as FabPermissionRecord;
 class Fab extends Component
 {
     /**
-     * Define the admin permission handle
+     * Define the permission handles
      * @var string
      */
     public static $adminPermissionHandle = 'admin';
+    public static $viewPermissionHandle = 'canView';
+    public static $editPermissionHandle = 'canEdit';
 
     /**
      * Returns Fab Permission records matching the passed criteria
@@ -44,7 +46,7 @@ class Fab extends Component
     {
         $currentSite = Craft::$app->sites->getCurrentSite();
         $criteria['siteId'] = $currentSite->id;
-        $fabPermissions = FabPermissionRecord::findAll($criteria);
+        $fabPermissions = FabPermissionsRecord::findAll($criteria);
 
         return (empty($fabPermissions) ? [] : $fabPermissions);
     }
@@ -63,7 +65,7 @@ class Fab extends Component
         if( $currentSite === null ) $currentSite = Craft::$app->sites->getCurrentSite();
 
         // Fetch permission records
-        $fabPermissions = FabPermissionRecord::findAll([
+        $fabPermissions = FabPermissionsRecord::findAll([
             'layoutId' => $tab->getLayout()->id,
             'tabId' => $tab->id,
             'siteId' => $currentSite->id
@@ -98,7 +100,7 @@ class Fab extends Component
         if( $currentSite === null ) $currentSite = Craft::$app->sites->getCurrentSite();
 
          // Fetch permission records
-        $fabPermissions = FabPermissionRecord::findAll([
+        $fabPermissions = FabPermissionsRecord::findAll([
             'layoutId' => $layoutId,
             'fieldId' => $field->id,
             'siteId' => $currentSite->id
@@ -127,12 +129,12 @@ class Fab extends Component
     public function saveFieldLayoutPermissions(FieldLayout $layout)
     {
         $request = Craft::$app->getRequest();
-        $postData = $request->post('tabPermissions') || $request->post('fieldPermissions');
+        $hasPostData = $request->post('tabPermissions') || $request->post('fieldPermissions');
         $tabPermissions = $request->post('tabPermissions') ?? [];
         $fieldPermissions = $request->post('fieldPermissions') ?? [];
 
         // we can't continue if there's no post data
-        if( empty($postData) ) return false;
+        if( empty($hasPostData) ) return false;
 
         $fabPermissionsData = [];
         $currentSite = Craft::$app->sites->getCurrentSite();
@@ -144,11 +146,12 @@ class Fab extends Component
                 if( urldecode($tabName) !== $tab->name ) continue;
 
                 // Fetch the user group ID
-                foreach ($permissions as $handle => $value) {
+                foreach ($permissions as $handle => $permissions) {
 
                     // Detect the User Group Id
                     $userGroupId = $this->getUserGroupIdFromHandle($handle);
-                    $value = $userGroupId === null ? '1' : $value;
+                    $canViewValue = ($userGroupId === null ? '1' : $permissions[self::$viewPermissionHandle]);
+                    $canEditValue = ($userGroupId === null ? '1' : $permissions[self::$editPermissionHandle]);
 
                     $fabPermissionsData[] = [
                         $layout->id,
@@ -156,19 +159,21 @@ class Fab extends Component
                         null,
                         $currentSite->id,
                         $userGroupId,
-                        $value
+                        (isset($canViewValue) ? $canViewValue : null),
+                        (isset($canEditValue) ? $canEditValue : null),
                     ];
                 }
             }
         }
 
         // Loop field permissions and work out permissions
-        foreach ($fieldPermissions as $fieldId => $permissions) {
-            foreach ($permissions as $handle => $value) {
+        foreach ($fieldPermissions as $fieldId => $values) {
+            foreach ($values as $handle => $permissions) {
 
                 // Detect the User Group Id
                 $userGroupId = $this->getUserGroupIdFromHandle($handle);
-                $value = $userGroupId === null ? '1' : $value;
+                $canViewValue = ($userGroupId === null ? '1' : $permissions[self::$viewPermissionHandle]);
+                $canEditValue = ($userGroupId === null ? '1' : $permissions[self::$editPermissionHandle]);
 
                 $fabPermissionsData[] = [
                     $layout->id,
@@ -176,13 +181,14 @@ class Fab extends Component
                     $fieldId,
                     $currentSite->id,
                     $userGroupId,
-                    $value
+                    (isset($canViewValue) ? $canViewValue : null),
+                    (isset($canEditValue) ? $canEditValue : null),
                 ];
             }
         }
 
         // Determine the fields to use
-        $fabPermissionsRecord = new FabPermissionRecord();
+        $fabPermissionsRecord = new FabPermissionsRecord();
         $fields = array_values(
             array_intersect($fabPermissionsRecord->attributes(), [
                 'layoutId',
@@ -190,12 +196,13 @@ class Fab extends Component
                 'fieldId',
                 'siteId',
                 'userGroupId',
-                'permission',
+                self::$viewPermissionHandle,
+                self::$editPermissionHandle,
             ]
         ));
 
         if( !empty($fabPermissionsData) ){
-            Craft::$app->db->createCommand()->batchInsert(FabPermissionRecord::tableName(), $fields, $fabPermissionsData)->execute();
+            Craft::$app->db->createCommand()->batchInsert(FabPermissionsRecord::tableName(), $fields, $fabPermissionsData)->execute();
         }
     }
 

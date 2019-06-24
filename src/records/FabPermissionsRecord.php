@@ -4,8 +4,9 @@ namespace thejoshsmith\fabpermissions\records;
 
 use Craft;
 use craft\db\ActiveRecord;
+use thejoshsmith\fabpermissions\FabPermissions;
 
-class FabPermissions extends ActiveRecord
+class FabPermissionsRecord extends ActiveRecord
 {
     /**
      * Define constants
@@ -40,8 +41,20 @@ class FabPermissions extends ActiveRecord
      * @author Josh Smith <me@joshsmith.dev>
      * @return boolean
      */
-    public function hasPermission()
+    public function hasViewPermission()
     {
-        return (bool) $this->permission;
+        $viewPermissionHandle = FabPermissions::$plugin->fabService::$viewPermissionHandle;
+        return (bool) $this->{$viewPermissionHandle};
+    }
+
+    /**
+     * Returns whether this record is readonly
+     * @author Josh Smith <me@joshsmith.dev>
+     * @return boolean
+     */
+    public function hasEditPermission()
+    {
+        $editPermissionHandle = FabPermissions::$plugin->fabService::$editPermissionHandle;
+        return (bool) $this->{$editPermissionHandle};
     }
 }

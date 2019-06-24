@@ -5,6 +5,7 @@ namespace thejoshsmith\fabpermissions\services;
 use Craft;
 use craft\services\Fields as CraftFieldsService;
 use thejoshsmith\fabpermissions\FabPermissions;
+use thejoshsmith\fabpermissions\decorators\StaticFieldDecorator;
 
 /**
  * Fields service.
@@ -29,6 +30,9 @@ class Fields extends CraftFieldsService
             if( !$fabService->hasFieldPermission($layoutId, $field, $user) ){
                 unset($fields[$i]);
             }
+            // if( $fabService->isReadOnly($layoutId, $field, $user) ){
+                // $fields[$i] = $field = new StaticFieldDecorator($field);
+            // }
         }
 
         return $fields;
