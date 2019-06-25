@@ -260,7 +260,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * Hides a tab fab permissions icon
 	 */
 	hideFabIcon: function($el){
-		var $fabIcon = $el.find('.js--fab-users');
+		var $fabIcon = $el.find('.js--fab-users').eq(0);
 		if( $fabIcon.length ){
 			$fabIcon.hide();
 		}
@@ -349,7 +349,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * @return {Boolean}
 	 */
 	isPermissionSet: function($tab, type, handle){
-		var $permissions = $tab.find('.fab-id-input');
+		var $permissions = $tab.find('.js--fab-tab-input');
 		if( ! $permissions.length ) return true;
 
 		var self = this,
@@ -377,7 +377,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * @return {Boolean}
 	 */
 	isFieldPermissionSet: function($field, type, handle){
-		var $permissions = $field.find('.fab-id-input');
+		var $permissions = $field.find('.js--fab-field-input');
 		if( ! $permissions.length ) return true;
 
 		var self = this,
