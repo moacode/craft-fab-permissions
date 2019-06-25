@@ -24,7 +24,7 @@ To install the plugin, follow these instructions.
 
 ## FAB Permissions Overview
 
-This plugin allows you to restrict access to certain user groups on a per tab or field basis.
+This plugin allows you to restrict access to certain user groups on a per tab or field basis. **NEW** - Read only access can now be set on fields.
 
 A use case for this would be if you had an SEO tab that only digital marketers and developers should be able to access. You can turn off access to client users whilst keeping access for the marketers and developers—The SEO tab will remain hidden to clients but visible for marketers and developers.
 
