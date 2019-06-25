@@ -4,7 +4,7 @@ namespace thejoshsmith\fabpermissions\migrations;
 
 use Craft;
 use craft\db\Migration;
-use thejoshsmith\fabpermissions\records\FabPermissions as FabPermissionsRecord;
+use thejoshsmith\fabpermissions\records\FabPermissionsRecord;
 
 /**
  * m190623_091258_fabpermissions_disabled_and_readonly_columns migration.

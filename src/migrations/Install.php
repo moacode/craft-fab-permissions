@@ -3,7 +3,7 @@
 namespace thejoshsmith\fabpermissions\migrations;
 
 use thejoshsmith\fabpermissions\FabPermissions;
-use thejoshsmith\fabpermissions\records\FabPermissions as FabPermissionsRecord;
+use thejoshsmith\fabpermissions\records\FabPermissionsRecord;
 
 use Craft;
 use craft\config\DbConfig;
@@ -102,7 +102,8 @@ class Install extends Migration
                     'fieldId' => $this->integer(),
                     'siteId' => $this->integer()->notNull(),
                     'userGroupId' => $this->integer()->null(),
-                    'permission' => $this->boolean()->notNull(),
+                    'canView' => $this->boolean()->notNull(),
+                    'canEdit' => $this->boolean()->notNull(),
                     'dateCreated' => $this->dateTime()->notNull(),
                     'dateUpdated' => $this->dateTime()->notNull(),
                     'uid' => $this->uid(),
