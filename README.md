@@ -24,7 +24,9 @@ To install the plugin, follow these instructions.
 
 ## FAB Permissions Overview
 
-This plugin allows you to restrict access to certain user groups on a per tab or field basis. **NEW** - Read only access can now be set on fields.
+This plugin allows you to restrict access to certain user groups on a per tab or field basis. 
+
+**NEW** - Read only access can now be set on fields.
 
 A use case for this would be if you had an SEO tab that only digital marketers and developers should be able to access. You can turn off access to client users whilst keeping access for the marketers and developers—The SEO tab will remain hidden to clients but visible for marketers and developers.
 
@@ -49,7 +51,7 @@ Great care has been taken to ensure the bare minimum of core functionality has b
 
 ![Field and Layout Designer](resources/img/step-1-field-and-layout-designer.png)
 
-2. Clicking the menu item will bring up the permissions modal. Check the user groups you'd like to give access to, and click save. In this screenshot, only Developers and Digital Marketers will be able to access the SEO tab.
+2. Clicking the menu item will bring up the permissions modal. Check the user groups you'd like to give access to, and click save. In this screenshot, Clients won't be able to access the SEO tab.
 
 ![Permissions Modal](resources/img/step-2-set-permissions-in-modal.png)
 
@@ -57,7 +59,7 @@ Great care has been taken to ensure the bare minimum of core functionality has b
 
 ![Red Dot Indication](resources/img/step-3-dot-indicator.png)
 
-4. Clients and Account Managers no longer have access to the SEO tab.
+4. Clients no longer have access to the SEO tab.
 
 ![SEO Tab Restricted](resources/img/step-4-tabs-are-restricted.png)
 
@@ -70,6 +72,8 @@ Great care has been taken to ensure the bare minimum of core functionality has b
 ![Field Permissions Dot Indicator](resources/img/step-5-dot-indicator.png)
 
 ![Field Restricted For Users](resources/img/step-5-no-access-to-field.png)
+
+_In this screenshot, the author user picker and matrix are set to read-only._
 
 6. Permissions can be cleared using the "Clear" button on the permissions modal:
 
