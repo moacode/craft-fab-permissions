@@ -110,6 +110,25 @@ class FabPermissions extends Plugin
                 'class' => 'thejoshsmith\fabpermissions\services\Fields'
             ]
         ]);
+
+        // Configure project config to fire these events with our new service,
+        // otherwise actions such as updating matrixes don't save.
+
+        // Load services
+        $projectConfigService = Craft::$app->getProjectConfig();
+        $fieldsService = Craft::$app->getFields();
+
+        // Groups
+        $projectConfigService
+            ->onAdd(Fields::CONFIG_FIELDGROUP_KEY . '.{uid}', [$fieldsService, 'handleChangedGroup'])
+            ->onUpdate(Fields::CONFIG_FIELDGROUP_KEY . '.{uid}', [$fieldsService, 'handleChangedGroup'])
+            ->onRemove(Fields::CONFIG_FIELDGROUP_KEY . '.{uid}', [$fieldsService, 'handleDeletedGroup']);
+
+        // Fields
+        $projectConfigService
+            ->onAdd(Fields::CONFIG_FIELDS_KEY . '.{uid}', [$fieldsService, 'handleChangedField'])
+            ->onUpdate(Fields::CONFIG_FIELDS_KEY . '.{uid}', [$fieldsService, 'handleChangedField'])
+            ->onRemove(Fields::CONFIG_FIELDS_KEY . '.{uid}', [$fieldsService, 'handleDeletedField']);
     }
 
     /**

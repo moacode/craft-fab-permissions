@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.1.1 - 2019-06-27 [CRITICAL]
+### Fixed
+- Project Config event handlers are now applied to the extended fields service, this resolves an issue where matrix fields weren't being saved
+
 ## 1.1.0 - 2019-06-25
 ### Changed
 - Read-only permissions can now be set on fields as well as hide/show
