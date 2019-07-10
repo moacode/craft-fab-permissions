@@ -23,5 +23,13 @@ class StaticFieldDecorator extends FieldDecorator {
 	public function getInputHtml($value, ElementInterface $element = null): string
 	{
 		return parent::getStaticHtml($value, $element);
-	}
+    }
+    
+    public function afterElementPropagate(ElementInterface $element, bool $isNew) {
+
+    }
+
+    public static function valueType() : string {
+        return 'mixed';
+    }
 }
