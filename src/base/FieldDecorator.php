@@ -77,7 +77,6 @@ abstract class FieldDecorator extends Decorator implements FieldInterface {
 		return parent::afterDelete();
 	}
 
-
 	// FieldInterface
 	public static function hasContentColumn(): bool
 	{
@@ -87,6 +86,11 @@ abstract class FieldDecorator extends Decorator implements FieldInterface {
 	public static function supportedTranslationMethods(): array
 	{
 		return Field::supportedTranslationMethods();
+	}
+
+	public static function valueType(): string
+	{
+		return Field::valueType();
 	}
 
 	public function getContentColumnType(): string
@@ -167,6 +171,11 @@ abstract class FieldDecorator extends Decorator implements FieldInterface {
 	public function afterElementSave(ElementInterface $element, bool $isNew)
 	{
 		return parent::afterElementSave($element, $isNew);
+	}
+
+	public function afterElementPropagate(ElementInterface $element, bool $isNew)
+	{
+		return parent::afterElementPropagate($element, $isNew);
 	}
 
 	public function beforeElementDelete(ElementInterface $element): bool
