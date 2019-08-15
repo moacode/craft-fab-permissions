@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.1.3 - 2019-08-15
+### Fixed
+- Tab permissions can now be set correctly.
+
 ## 1.1.2 - 2019-07-14
 ### Fixed
 - Updated to support Craft 3.2 (thanks [ajoliveau](https://github.com/ajoliveau)).

@@ -186,7 +186,6 @@ class Fab extends Component
                     // Detect the User Group Id
                     $userGroupId = $this->getUserGroupIdFromHandle($handle);
                     $canViewValue = ($userGroupId === null ? '1' : $permissions[self::$viewPermissionHandle]);
-                    // $canEditValue = ($userGroupId === null ? '1' : $permissions[self::$editPermissionHandle]);
 
                     $fabPermissionsData[] = [
                         $layout->id,
@@ -194,9 +193,8 @@ class Fab extends Component
                         null,
                         $currentSite->id,
                         $userGroupId,
-                        (isset($canViewValue) ? $canViewValue : null),
-                        null
-                        // (isset($canEditValue) ? $canEditValue : null),
+                        (isset($canViewValue) ? $canViewValue : '0'),
+                        '1' // This isn't configurable via the front end
                     ];
                 }
             }
@@ -217,8 +215,8 @@ class Fab extends Component
                     $fieldId,
                     $currentSite->id,
                     $userGroupId,
-                    (isset($canViewValue) ? $canViewValue : null),
-                    (isset($canEditValue) ? $canEditValue : null),
+                    (isset($canViewValue) ? $canViewValue : '0'),
+                    (isset($canEditValue) ? $canEditValue : '0'),
                 ];
             }
         }
