@@ -62,6 +62,7 @@ class Fab extends Component
     public function canViewTab(FieldLayoutTab $tab, User $user, $currentSite = null)
     {
         if( $user->getIsAdmin() ) return true;
+        if( $user->getIsGuest() ) return false;
         if( $currentSite === null ) $currentSite = Craft::$app->sites->getCurrentSite();
 
         // Fetch permission records
@@ -97,6 +98,7 @@ class Fab extends Component
     public function canViewField(int $layoutId, Field $field, User $user, $currentSite = null)
     {
         if( $user->getIsAdmin() ) return true;
+        if( $user->getIsGuest() ) return false;
         if( $currentSite === null ) $currentSite = Craft::$app->sites->getCurrentSite();
 
          // Fetch permission records

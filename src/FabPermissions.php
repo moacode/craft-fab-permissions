@@ -62,6 +62,10 @@ class FabPermissions extends Plugin
         parent::init();
         self::$plugin = $this;
 
+        // Ensure we only init the plugin on Control Panel requests.
+        $request = Craft::$app->getRequest();
+        if( !$request->getIsCpRequest() ) return false;
+
         // Bootstrap this plugin
         $this->registerAssetBundles();
         $this->registerComponents();
@@ -88,10 +92,7 @@ class FabPermissions extends Plugin
     protected function registerAssetBundles()
     {
         // register anasset bundle on Control Panel requests
-        $request = Craft::$app->getRequest();
-        if( $request->getIsCpRequest() ){
-            FabPermissionsAsset::register(Craft::$app->view);
-        }
+        FabPermissionsAsset::register(Craft::$app->view);
     }
 
     /**
