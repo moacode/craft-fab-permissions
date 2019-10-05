@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.2.0 - 2019-10-05
+### Changed
+- Craft's Field service must now be overriden in config/app.php to ensure project config works correctly (and doesn't break in the future).
+
 ## 1.1.5 - 2019-10-05
 ### Fixed
 - New FieldsInterface method added in the FieldDecorator class.

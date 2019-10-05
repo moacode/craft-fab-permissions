@@ -22,9 +22,19 @@ To install the plugin, follow these instructions.
 
 3. In the Control Panel, go to Settings → Plugins and click the “Install” button for FAB Permissions.
 
+4. **Important** Override the Craft Fields Service with the FAB Permissions Fields Service in `config/app.php`:
+
+		return [
+			'components' => [
+				'fields' => [
+					'class' => 'thejoshsmith\fabpermissions\services\Fields'
+				]
+			]
+		]
+
 ## FAB Permissions Overview
 
-This plugin allows you to restrict access to certain user groups on a per tab or field basis. 
+This plugin allows you to restrict access to certain user groups on a per tab or field basis.
 
 **NEW** - Read only access can now be set on fields.
 
@@ -43,7 +53,7 @@ You can alter permissions for any element that uses the core field layout design
 
 The plugin extends the core field and layout designer javascript object, and injects hidden inputs with user group permissons. Once permissions are saved in the database, an extended fields service is able to filter out fields and tabs based on the logged in user and their access.
 
-Great care has been taken to ensure the bare minimum of core functionality has been extended, but you should note that the fields service is replaced with a minimal extended version for the field and tab filtering.
+Great care has been taken to ensure the bare minimum of core functionality has been extended. You are required to override the base Craft Fields Service with the FAB Permissions Fields Service within your config/app.php file. Until recently this was automatically done, but since plugins are registered after the Project Config listeners, we need to ensure the FAB Permissions Fields Service is loaded at an earlier point, and the only way to do this is to manually override Craft's Fields Service in your app config.
 
 ## Using FAB Permissions
 

@@ -10,13 +10,11 @@
 namespace thejoshsmith\fabpermissions;
 
 use thejoshsmith\fabpermissions\services\Fab as FabService;
+use thejoshsmith\fabpermissions\services\Fields;
 
 use Craft;
 use craft\base\Plugin;
-use craft\services\Plugins;
-use craft\events\PluginEvent;
 use craft\events\FieldLayoutEvent;
-use craft\services\Fields;
 use thejoshsmith\fabpermissions\assetbundles\fabpermissions\FabPermissionsAsset;
 
 use yii\base\Event;
@@ -102,34 +100,13 @@ class FabPermissions extends Plugin
      */
     protected function registerComponents()
     {
-        // Override the Craft Fields service with our own one.
-        // Note: I don't like overriding core components, but in this case it was the only way to tap into
-        // the fields being returned by the service, and it seemed the "cleanest" approach.
-        Craft::$app->setComponents([
-            'fabService' => FabService::class,
-            'fields' => [
-                'class' => 'thejoshsmith\fabpermissions\services\Fields'
-            ]
-        ]);
+        Craft::$app->setComponents(['fabService' => FabService::class]);
 
-        // Configure project config to fire these events with our new service,
-        // otherwise actions such as updating matrixes don't save.
-
-        // Load services
-        $projectConfigService = Craft::$app->getProjectConfig();
+        // Show a warning to the user if the component config hasn't been overriden.
         $fieldsService = Craft::$app->getFields();
-
-        // Groups
-        $projectConfigService
-            ->onAdd(Fields::CONFIG_FIELDGROUP_KEY . '.{uid}', [$fieldsService, 'handleChangedGroup'])
-            ->onUpdate(Fields::CONFIG_FIELDGROUP_KEY . '.{uid}', [$fieldsService, 'handleChangedGroup'])
-            ->onRemove(Fields::CONFIG_FIELDGROUP_KEY . '.{uid}', [$fieldsService, 'handleDeletedGroup']);
-
-        // Fields
-        $projectConfigService
-            ->onAdd(Fields::CONFIG_FIELDS_KEY . '.{uid}', [$fieldsService, 'handleChangedField'])
-            ->onUpdate(Fields::CONFIG_FIELDS_KEY . '.{uid}', [$fieldsService, 'handleChangedField'])
-            ->onRemove(Fields::CONFIG_FIELDS_KEY . '.{uid}', [$fieldsService, 'handleDeletedField']);
+        if( !is_a($fieldsService, 'thejoshsmith\\fabpermissions\\services\\Fields') ){
+            Craft::$app->getSession()->setError('Fab Permissions Plugin: Please override the fields service in your app config - Check the README for more information.');
+        }
     }
 
     /**
