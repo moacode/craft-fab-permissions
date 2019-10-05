@@ -163,6 +163,11 @@ abstract class FieldDecorator extends Decorator implements FieldInterface {
 		return parent::getGroup();
 	}
 
+    public function getContentGqlType()
+    {
+        return parent::getContentGqlType();
+    }
+
 	public function beforeElementSave(ElementInterface $element, bool $isNew): bool
 	{
 		return parent::beforeElementSave($element, $isNew);
