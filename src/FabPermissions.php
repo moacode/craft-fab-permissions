@@ -60,13 +60,21 @@ class FabPermissions extends Plugin
         parent::init();
         self::$plugin = $this;
 
+        // Register services
+        $this->registerComponents();
+
         // Ensure we only init the plugin on Control Panel requests.
         $request = Craft::$app->getRequest();
         if( !$request->getIsCpRequest() ) return false;
 
+        // Show a warning to the user if the component config hasn't been overriden.
+        $fieldsService = Craft::$app->getFields();
+        if( !is_a($fieldsService, 'thejoshsmith\\fabpermissions\\services\\Fields') ){
+            Craft::$app->getSession()->setError('Fab Permissions Plugin: Please override the fields service in your app config - Check the README for more information.');
+        }
+
         // Bootstrap this plugin
         $this->registerAssetBundles();
-        $this->registerComponents();
         $this->handleEvents();
 
         Craft::info(
@@ -101,12 +109,6 @@ class FabPermissions extends Plugin
     protected function registerComponents()
     {
         Craft::$app->setComponents(['fabService' => FabService::class]);
-
-        // Show a warning to the user if the component config hasn't been overriden.
-        $fieldsService = Craft::$app->getFields();
-        if( !is_a($fieldsService, 'thejoshsmith\\fabpermissions\\services\\Fields') ){
-            Craft::$app->getSession()->setError('Fab Permissions Plugin: Please override the fields service in your app config - Check the README for more information.');
-        }
     }
 
     /**
