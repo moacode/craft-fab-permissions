@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.2.3 - 2019-11-07
+### Changed
+- Smoothed the plugin un-installation (surely no one will ;-)) when FabService was no longer available, but the overridden Fields service still referenced it.
+
 ## 1.2.2 - 2019-11-07
 ### Fixed
 - Fixed an issue where console requests would fail due to a console user being passed to the permissions service.

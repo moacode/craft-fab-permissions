@@ -31,6 +31,8 @@ use yii\base\Event;
  */
 class FabPermissions extends Plugin
 {
+    const PLUGIN_HANDLE = 'craft-fab-permissions';
+
     // Static Properties
     // =========================================================================
 
@@ -78,7 +80,7 @@ class FabPermissions extends Plugin
 
         Craft::info(
             Craft::t(
-                'craft-fab-permissions',
+                self::PLUGIN_HANDLE,
                 '{name} plugin loaded',
                 ['name' => $this->name]
             ),

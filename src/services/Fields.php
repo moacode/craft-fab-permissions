@@ -23,12 +23,11 @@ class Fields extends CraftFieldsService
      */
     public function getFieldsByLayoutId(int $layoutId): array
     {
-        $user = Craft::$app->getUser();
         $fields = parent::getFieldsByLayoutId($layoutId);
-        $fabService = FabPermissions::$plugin->fabService;
+        if( !$this->_shouldCheckPermissions() ) return $fields;
 
-        // Don't process permissions if this request is unsupported
-        if( !$fabService->isSupportedRequest() ) return $fields;
+        $user = Craft::$app->getUser();
+        $fabService = FabPermissions::$plugin->fabService;
 
         // Check if this user has permissions to view this field
         foreach ($fields as $i => $field) {
@@ -52,12 +51,11 @@ class Fields extends CraftFieldsService
      */
     public function getLayoutTabsById(int $layoutId): array
     {
-        $user = Craft::$app->getUser();
         $tabs = parent::getLayoutTabsById($layoutId);
-        $fabService = FabPermissions::$plugin->fabService;
+        if( !$this->_shouldCheckPermissions() ) return $tabs;
 
-        // Don't process permissions if this request is unsupported
-        if( !$fabService->isSupportedRequest() ) return $tabs;
+        $user = Craft::$app->getUser();
+        $fabService = FabPermissions::$plugin->fabService;
 
         // Check if this user has permissions to view this tab
         foreach ($tabs as $i => $tab) {
@@ -67,5 +65,34 @@ class Fields extends CraftFieldsService
         }
 
         return $tabs;
+    }
+
+    /**
+     * Determines whether the service should check permissions
+     * @return boolean
+     */
+    private function _shouldCheckPermissions(): bool
+    {
+        if( !$this->_isFabPermissionsRunning() ) return false;
+
+        $fabService = FabPermissions::$plugin->fabService;
+        if( !$fabService->isSupportedRequest() ) return false;
+
+        return true;
+    }
+
+    /**
+     * Returns true if the plugin is installed and enabled
+     * We need to do this check here as this service will be overriden in app config, 
+     * regardless of whether the plugin is actually installed/enabled or not.
+     * @return boolean
+     */
+    private function _isFabPermissionsRunning(): bool
+    {
+        $plugins = Craft::$app->getPlugins();
+        $isPluginInstalled = $plugins->isPluginInstalled(FabPermissions::PLUGIN_HANDLE);
+        $isPluginEnabled = $plugins->isPluginEnabled(FabPermissions::PLUGIN_HANDLE);        
+
+        return $isPluginInstalled && $isPluginEnabled;
     }
 }
