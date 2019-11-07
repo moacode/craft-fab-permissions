@@ -259,4 +259,15 @@ class Fab extends Component
 
         return $group->id;
     }
+
+     /**
+     * Returns whether the current Craft request is supported for parsing permissions
+     * Currently only control panel requests are valid
+     * @author Josh Smith <me@joshsmith.dev>
+     * @return boolean
+     */
+    public function isSupportedRequest()
+    {
+        return Craft::$app->getRequest()->getIsCpRequest();
+    }
 }

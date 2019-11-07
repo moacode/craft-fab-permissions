@@ -27,6 +27,9 @@ class Fields extends CraftFieldsService
         $fields = parent::getFieldsByLayoutId($layoutId);
         $fabService = FabPermissions::$plugin->fabService;
 
+        // Don't process permissions if this request is unsupported
+        if( !$fabService->isSupportedRequest() ) return $fields;
+
         // Check if this user has permissions to view this field
         foreach ($fields as $i => $field) {
             if( !$fabService->canViewField($layoutId, $field, $user) ){
@@ -52,6 +55,9 @@ class Fields extends CraftFieldsService
         $user = Craft::$app->getUser();
         $tabs = parent::getLayoutTabsById($layoutId);
         $fabService = FabPermissions::$plugin->fabService;
+
+        // Don't process permissions if this request is unsupported
+        if( !$fabService->isSupportedRequest() ) return $tabs;
 
         // Check if this user has permissions to view this tab
         foreach ($tabs as $i => $tab) {
