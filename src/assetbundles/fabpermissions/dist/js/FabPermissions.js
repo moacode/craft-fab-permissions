@@ -186,7 +186,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 		}
 
 		// Reset the form unload values, as we've injected hidden inputs
-		Craft.cp.initConfirmUnloadForms();
+		Craft.cp.initSpecialForms();
 	},
 
 	/**
@@ -217,7 +217,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 		}
 
 		// Reset the form unload values, as we've injected hidden inputs
-		Craft.cp.initConfirmUnloadForms();
+		Craft.cp.initSpecialForms();
 	},
 
 	/**

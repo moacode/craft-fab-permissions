@@ -1,8 +1,12 @@
-# Control Panel Permissions Changelog
+# Craft Field and Tab Permissions Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## 1.3.0 - 2020-03-08
+### Changed
+- Updated the plugin to be compatible with Craft 3.4.
 
 ## 1.2.3 - 2019-11-07
 ### Changed

@@ -103,6 +103,11 @@ abstract class FieldDecorator extends Decorator implements FieldInterface {
 		return parent::getIsTranslatable($element);
 	}
 
+	public function getTranslationDescription(ElementInterface $element = null)
+	{
+		return parent::getTranslationDescription($element);
+	}
+
 	public function getTranslationKey(ElementInterface $element): string
 	{
 		return parent::getTranslationKey($element);
