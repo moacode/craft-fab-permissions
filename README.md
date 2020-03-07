@@ -1,4 +1,4 @@
-# Field and Tab Permissions plugin for Craft CMS 3.x
+# Field and Tab Permissions plugin for Craft CMS 3.4
 
 A plugin that allows you to set field and tab visibility for particular user groups in the CMS.
 
@@ -6,7 +6,7 @@ A plugin that allows you to set field and tab visibility for particular user gro
 
 ## Requirements
 
-This plugin requires Craft CMS 3.0.0-beta.23 or later.
+This plugin requires Craft CMS 3.4 or later.
 
 ## Installation
 
