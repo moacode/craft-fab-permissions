@@ -262,12 +262,28 @@ class Fab extends Component
 
      /**
      * Returns whether the current Craft request is supported for parsing permissions
-     * Currently only control panel requests are valid
+     * @since 1.4.0
      * @author Josh Smith <me@joshsmith.dev>
      * @return boolean
      */
     public function isSupportedRequest()
     {
-        return Craft::$app->getRequest()->getIsCpRequest();
+        $user = Craft::$app->user;
+        $request = Craft::$app->getRequest();
+        $isCpRequest = Craft::$app->getRequest()->getIsCpRequest();
+
+        // All Control Panel requests are supported
+        if( $isCpRequest ) {
+            return true;
+        }
+
+        // Front end POST requests for logged in users are supported
+        // This means that permissions on field layouts will apply to logged in users on form submissions etc.
+        if( !$isCpRequest && !$user->getIsGuest() && $request->getIsPost() ){
+            return true;
+        }
+
+        // All other requests are not supported
+        return false;
     }
 }

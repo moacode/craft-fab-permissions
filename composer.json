@@ -2,7 +2,7 @@
     "name": "thejoshsmith/craft-fab-permissions",
     "description": "Give yourself better control over your sections with Craft Field and Tab (FAB) Permissions. Restrict which tabs and fields are visible to different user groups.",
     "type": "craft-plugin",
-    "version": "1.3",
+    "version": "1.4.0",
     "keywords": [
         "craft",
         "cms",

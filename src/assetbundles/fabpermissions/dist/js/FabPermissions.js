@@ -186,7 +186,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 		}
 
 		// Reset the form unload values, as we've injected hidden inputs
-		Craft.cp.initSpecialForms();
+		self.resetFormUnload();
 	},
 
 	/**
@@ -217,6 +217,16 @@ Craft.FabPermissions = Garnish.Base.extend({
 		}
 
 		// Reset the form unload values, as we've injected hidden inputs
+		self.resetFormUnload();
+	},
+
+	/**
+	 * Resets the layout form special forms unload
+	 * @author Josh Smith <josh@batch.nz>
+	 * @return void
+	 */
+	resetFormUnload(){
+		$('#content').find('form').data('initialSerializedValue', false);
 		Craft.cp.initSpecialForms();
 	},
 
@@ -690,19 +700,34 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 				},
 				canEdit: {
 					checked: canEdit,
-					disabled: false
+					disabled: !canView
 				}
-			}).on('click', 'input', function(e){
-				e.stopPropagation();
+			}).on('change', 'input', function(e){
+				self._handleOnPermissionClick($(this), !$(this).prop('checked'));
 			}).on('click', 'td', function(e){
 				var $checkbox = $(this).find('input[type="checkbox"]');
-				$checkbox.prop('checked', !$checkbox.prop('checked'));
+				self._handleOnPermissionClick($checkbox, !$checkbox.prop('checked'));
 			});
 
 			$tableBody.append($tableRow);
 		});
 	},
+	_handleOnPermissionClick: function($checkbox, value) {
+		if( $checkbox.length === 0 ) return;
+		if( $checkbox.prop('disabled') ) return;
 
+		// Set the checkbox value
+		$checkbox.prop('checked', value);
+
+		// Disable the edit permission if we can't view
+		if( $checkbox.data('type') === 'canView' ){
+			var $editCheckbox = $checkbox.parents('tr').find('[data-type="canEdit"]');
+			if( $editCheckbox.length === 0 ) return;
+
+			$editCheckbox.prop('disabled', !value)
+			if( !value ) $editCheckbox.prop('checked', false);
+		}
+	},
 	_createTableRow: function(rowData){
 		return $(
 			'<tr>' +

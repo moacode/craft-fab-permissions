@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.4.0 - 2020-05-02
+### Changed
+- Fixed an issue where form unload wasn't working properly due to changes in Craft 3.4.
+- Improved the checkbox permissions toggles to disable the "Can Edit" permission when "Can View" is unchecked.
+- The plugin now runs on front end POST requests for logged in users. This means permissions will apply to field layouts for logged in users on form submissions etc.
+
 ## 1.3.0 - 2020-03-08
 ### Changed
 - Updated the plugin to be compatible with Craft 3.4.

@@ -65,8 +65,8 @@ class FabPermissions extends Plugin
         // Register services
         $this->registerComponents();
 
-        // Ensure we only init the plugin on supported requests.
-        if( !$this->fabService->isSupportedRequest() ) return false;
+        // Ensure we only init the plugin on CP requests.
+        if( !Craft::$app->getRequest()->getIsCpRequest() ) return false;
 
         // Show a warning to the user if the component config hasn't been overriden.
         $fieldsService = Craft::$app->getFields();
