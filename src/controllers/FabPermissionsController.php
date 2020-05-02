@@ -52,6 +52,9 @@ class FabPermissionsController extends Controller
             ]);
         }
 
+        // Fetch all site Ids
+        $siteIds = Craft::$app->getSites()->getAllSiteIds();
+
         // Fetch the layout
         $layout = Craft::$app->getFields()->getLayoutById($layoutId);
 
@@ -64,13 +67,14 @@ class FabPermissionsController extends Controller
             // Fetch permissions for this tab
             $tabPermissions = $fabService->getPermissions([
                 'layoutId' => $layoutId,
-                'tabId' => $tab->id
+                'tabId' => $tab->id,
+                'siteId' => ['in', $siteIds]
             ]);
 
             // Loop permission records and assign to tab data
             foreach ($tabPermissions as $permission) {
                 $userGroupHandle = (is_null($permission->userGroupId) ? $fabService::$adminPermissionHandle : $permission->getUserGroup()->handle);
-                $tabsData[$tab->name][$userGroupHandle] = [
+                $tabsData[$tab->name][$permission->siteId][$userGroupHandle] = [
                     $fabService::$viewPermissionHandle => $permission->hasViewPermission(),
                     $fabService::$editPermissionHandle => $permission->hasEditPermission()
                 ];
@@ -80,13 +84,14 @@ class FabPermissionsController extends Controller
         $fieldsData = [];
         $fieldPermissions = $fabService->getPermissions([
             'layoutId' => $layoutId,
-            'tabId' => null
+            'tabId' => null,
+            'siteId' => $siteIds
         ]);
 
         // Loop permission records and assign to tab data
         foreach ($fieldPermissions as $permission) {
             $userGroupHandle = (is_null($permission->userGroupId) ? $fabService::$adminPermissionHandle : $permission->getUserGroup()->handle);
-            $fieldsData[$permission->fieldId][$userGroupHandle] = [
+            $fieldsData[$permission->fieldId][$permission->siteId][$userGroupHandle] = [
                 $fabService::$viewPermissionHandle => $permission->hasViewPermission(),
                 $fabService::$editPermissionHandle => $permission->hasEditPermission()
             ];

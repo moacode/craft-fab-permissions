@@ -24,10 +24,11 @@ Craft.FabPermissions = Garnish.Base.extend({
 	$el: null,
 	data : {
 		tabs: [],
-		fields: []
+		fields: [],
+		siteId: Craft.siteId
 	},
 	isLoading: true,
-	userGroups: {},
+	userGroups: [],
 	loadingPromise: new $.Deferred(),
 	actionFieldAndTabPermissionsUrl: 'craft-fab-permissions/fab-permissions/get-field-and-tab-permissions',
 	actionUserGroupsUrl: 'craft-fab-permissions/fab-permissions/get-user-groups',
@@ -72,8 +73,8 @@ Craft.FabPermissions = Garnish.Base.extend({
 
 		// Create an array of deferred promises
 		$.when.apply($, [$fieldAndTabPermissionsRequest, $userGroupsRequest]).done(function(){
-			self.data = $fieldAndTabPermissionsRequest.responseJSON.data;
-			self.userGroups = $userGroupsRequest.responseJSON.data.userGroups;
+			self.data = $.extend(self.data, $fieldAndTabPermissionsRequest.responseJSON.data);
+			self.userGroups = $.extend(self.userGroups, $userGroupsRequest.responseJSON.data.userGroups);
 		}).always(function(){
 			self.loadingPromise.resolve();
 		});
@@ -208,10 +209,12 @@ Craft.FabPermissions = Garnish.Base.extend({
 			this.showFabIcon($field);
 
 			// Loop the permissions and add hidden inputs
-			for(var userGroupHandle in fieldPermissions){
-				for(var type in fieldPermissions[userGroupHandle]){
-					var hasPermission = fieldPermissions[userGroupHandle][type];
-					self.addFieldInput($field, type, userGroupHandle, hasPermission);
+			for(var siteId in fieldPermissions){
+				for(var userGroupHandle in fieldPermissions[siteId]){
+					for(var type in fieldPermissions[siteId][userGroupHandle]){
+						var hasPermission = fieldPermissions[siteId][userGroupHandle][type];
+						self.addFieldInput($field, type, userGroupHandle, siteId, hasPermission);
+					}
 				}
 			}
 		}
@@ -296,8 +299,8 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * @param  {string}  handle        User group handle
 	 * @param  {Boolean} hasPermission Whether or not this user group has permissions to view this field
 	 */
-	addFieldInput: function($field, type, handle, hasPermission){
-		$field.append('<input class="fab-id-input js--fab-field-input" type="hidden" data-id="'+$field.data('id')+'" data-handle="'+handle+'" data-type="'+type+'" name="fieldPermissions['+$field.data('id')+']['+handle+']['+type+']" value="'+(hasPermission ? '1' : '0')+'">');
+	addFieldInput: function($field, type, handle, siteId, hasPermission){
+		$field.append('<input class="fab-id-input js--fab-field-input" type="hidden" data-id="'+$field.data('id')+'" data-site-id="'+siteId+'" data-handle="'+handle+'" data-type="'+type+'" name="fieldPermissions['+siteId+']['+$field.data('id')+']['+handle+']['+type+']" value="'+(hasPermission ? '1' : '0')+'">');
 	},
 
 	/**
@@ -350,7 +353,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 */
 	isPermissionSet: function($tab, type, handle){
 		var $permissions = $tab.find('.js--fab-tab-input');
-		if( ! $permissions.length ) return true;
+		if(!$permissions.length ) return true;
 
 		var self = this,
 			matchedHandle = false;
@@ -376,9 +379,9 @@ Craft.FabPermissions = Garnish.Base.extend({
 	 * @param  {string}  handle User group handle
 	 * @return {Boolean}
 	 */
-	isFieldPermissionSet: function($field, type, handle){
+	isFieldPermissionSet: function($field, type, handle, siteId){
 		var $permissions = $field.find('.js--fab-field-input');
-		if( ! $permissions.length ) return true;
+		if(!$permissions.length ) return true;
 
 		var self = this,
 			matchedHandle = false;
@@ -390,6 +393,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 
 			if(
 				$field.data('id') === $input.data('id') &&
+				$input.data('siteId') === siteId &&
 				$input.data('type') === type &&
 				$input.data('handle') === handle &&
 				$input.val() === '1'
@@ -619,13 +623,34 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 		// Define the submit button
 		this.$submitBtn = $('<input type="submit" class="btn submit" value="' + Craft.t('app', 'Save') + '" />').appendTo($buttons);
 
+		if( Craft.sites.length > 0 ){
+			var $siteSelection =
+			$('<div id="site-selection-field" class="field first">' +
+				'<div class="heading">' +
+					'<label id="site-selection-label" for="site-selection">Current Site</label>' +
+					'<div class="instructions"><p>Which site should this field have permissions set for?</p></div>' +
+				'</div>' +
+				'<div class="input ltr">' +
+					'<div class="select">' +
+						'<select id="site-selection" name="site-selection">' +
+							Craft.sites.map(function(site){ return '<option value="'+site.id+'">'+site.name+'</option>'; }) +
+						'</select>' +
+					'</div>' +
+				'</div>' +
+			'</div>').insertAfter($body.find('.content-summary'));
+		}
+
 		// Add event listeners
 		this.addListener($clearBtn, 'click', 'clearPermissions');
 		this.addListener($cancelBtn, 'click', 'hide');
 		this.addListener(this.$form, 'submit', 'handleSubmit');
 
+		if( $siteSelection.length > 0 ){
+			this.addListener($siteSelection.find('#site-selection'), 'change', 'refreshPermissions');
+		}
+
 		// Fetch and populate the user group information
-		this._populateUserGroups(FabPermissions.userGroups);
+		this._populateUserGroups(FabPermissions.userGroups, FabPermissions.data.siteId);
 
 		this.base(this.$form, settings);
 	},
@@ -647,13 +672,28 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 		throw Error('handleSubmit must not be called directly.');
 	},
 
+	refreshPermissions: function(e){
+		var $select = $(e.currentTarget),
+			currentSiteId = parseInt($select.val());
+// Todo, drive checkbox data off JSON object instead of input fields
+		this._clearTable();
+		this._populateUserGroups(FabPermissions.userGroups, currentSiteId);
+	},
+
+	_clearTable: function() {
+		var $table = this.$form.find('.js--fab-table'),
+			$tableBody = $table.find('tbody');
+
+		return $tableBody.children().remove();
+	},
+
 	/**
 	 * Populates the user group checkboxes into the modal
 	 * @author Josh Smith <josh.smith@platocreative.co.nz>
 	 * @param  {array} userGroups  An array of user groups
 	 * @return {void}
 	 */
-	_populateUserGroups: function(userGroups){
+	_populateUserGroups: function(userGroups, siteId){
 
 		var self = this,
 			$table = this.$form.find('.js--fab-table'),
@@ -677,8 +717,8 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 		userGroups.forEach(function(userGroup){
 
 			// Use saved defaults if the user hasn't made changes yet.
-			var canView = self._isPermissionSet(self.settings.$el, 'canView', userGroup.handle);
-			var canEdit = self._isPermissionSet(self.settings.$el, 'canEdit', userGroup.handle);
+			var canView = self._isPermissionSet(self.settings.$el, 'canView', userGroup.handle, siteId);
+			var canEdit = self._isPermissionSet(self.settings.$el, 'canEdit', userGroup.handle, siteId);
 
 			// Create a table row and assign click event handlers
 			var $tableRow = self._createTableRow({
@@ -723,8 +763,8 @@ Craft.BaseUserPermissionSelectorModal = Garnish.Modal.extend({
 		);
 	},
 
-	_isPermissionSet: function($el, type, handle){
-		return FabPermissions.isPermissionSet($el, type, handle);
+	_isPermissionSet: function($el, type, handle, siteId){
+		return FabPermissions.isPermissionSet($el, type, handle, siteId);
 	}
 });
 
@@ -819,7 +859,8 @@ Craft.FieldUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.e
 		// Remove existing selections
 		FabPermissions.removeFieldInputs(this.settings.$el);
 
-		var self = this;
+		var self = this,
+			siteId = FabPermissions.data.siteId;
 
 		// Loop through each non-disabled checkbox option, and render hidden inputs into the DOM.
 		this.$form.find('.tableview input[type="checkbox"]').each(function(i, checkbox){
@@ -827,7 +868,7 @@ Craft.FieldUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.e
 			var $checkbox = $(checkbox);
 
 			// Append the hidden input
-			FabPermissions.addFieldInput(self.settings.$el, $checkbox.data('type'), $checkbox.val(), $checkbox.is(':checked'));
+			FabPermissions.addFieldInput(self.settings.$el, $checkbox.data('type'), $checkbox.val(), siteId, $checkbox.is(':checked'));
 		});
 
 		FabPermissions.showFabIcon(self.settings.$el);
@@ -855,7 +896,7 @@ Craft.FieldUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.e
 	 * @param  {string}  handle User group handle
 	 * @return {Boolean}
 	 */
-	_isPermissionSet: function($el, type, handle){
-		return FabPermissions.isFieldPermissionSet($el, type, handle);
+	_isPermissionSet: function($el, type, handle, siteId){
+		return FabPermissions.isFieldPermissionSet($el, type, handle, siteId);
 	}
 });

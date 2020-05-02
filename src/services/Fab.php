@@ -44,10 +44,7 @@ class Fab extends Component
      */
     public function getPermissions($criteria = []) : array
     {
-        $currentSite = Craft::$app->sites->getCurrentSite();
-        $criteria['siteId'] = $currentSite->id;
-        $fabPermissions = FabPermissionsRecord::findAll($criteria);
-
+        $fabPermissions = FabPermissionsRecord::find()->where($criteria)->all();
         return (empty($fabPermissions) ? [] : $fabPermissions);
     }
 
