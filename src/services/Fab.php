@@ -182,7 +182,14 @@ class Fab extends Component
         $tabPermissions = $request->post('tabPermissions') ?? [];
         $fieldPermissions = $request->post('fieldPermissions') ?? [];
 
+        // The front end didn't finish loading before it was saved
+        // TODO: Remove this once the below has been addressed.
+        if( $request->post('fabPermissionsAbort') ){
+            return;
+        }
+
         // No POST? Clean up all permissions just to be safe
+        // TODO: use joins to clear stale information and run instead of deletePermissions().
         if( empty($hasPostData) ){
             return $this->deletePermissions($layout->id);
         };

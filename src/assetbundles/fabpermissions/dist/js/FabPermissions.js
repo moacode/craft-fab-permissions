@@ -35,6 +35,7 @@ Craft.FabPermissions = Garnish.Base.extend({
 
 	init: function(settings){
 
+		var self = this;
 		this.settings = $.extend({}, Craft.FabPermissions.defaults, settings);
 
 		// Set object properties
@@ -47,13 +48,18 @@ Craft.FabPermissions = Garnish.Base.extend({
 
 		this.isLoading = true;
 
+		// Send information to the server that the loading of field and tab data never completed
+		Craft.cp.on('beforeSaveShortcut', $.proxy(function() {
+			if( self.isLoading === true ){
+				self.$el.append('<input type="hidden" name="fabPermissionsAbort" value="1">');
+			}
+		}));
+
 		// Load the permissions adta
-		this._getFabPermissions().done(function(){
-
-		}).fail(function(){
-
+		this._getFabPermissions().fail(function(){
+			console.error('Failed to load Field and Tab permissions.');
 		}).always(function(){
-			this.isLoading = false;
+			self.isLoading = false;
 			$('.btn.submit').removeClass('disabled');
 		});
 	},
