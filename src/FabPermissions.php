@@ -17,7 +17,7 @@ use Craft;
 use craft\base\Plugin;
 use craft\events\FieldLayoutEvent;
 use craft\events\ConfigEvent;
-// use craft\events\RebuildConfigEvent;
+use craft\events\RebuildConfigEvent;
 use craft\services\ProjectConfig;
 use craft\services\Sites;
 use craft\services\UserGroups;
@@ -68,6 +68,7 @@ class FabPermissions extends Plugin
 
         // Register services
         $this->registerComponents();
+        $this->registerProjectConfig();
 
         // Ensure we only init the plugin on CP requests.
         if( !Craft::$app->getRequest()->getIsCpRequest() ) return false;
@@ -116,23 +117,9 @@ class FabPermissions extends Plugin
         Craft::$app->setComponents(['fabService' => FabService::class]);
     }
 
-    /**
-     * Attach event handlers
-     * @author Josh Smith <me@joshsmith.dev>
-     * @return void
-     */
-    protected function handleEvents()
+    protected function registerProjectConfig()
     {
-        // Process the saving of permisisons on tabs and fields
-        Event::on(
-            Fields::class,
-            Fields::EVENT_AFTER_SAVE_FIELD_LAYOUT,
-            function(FieldLayoutEvent $event) {
-                $this->fabService->saveFieldLayoutPermissions($event->layout);
-            }
-        );
-
-        /**
+         /**
          * Rebuilds the field and tabs permission project config data from the database
          */
         Event::on(ProjectConfig::class, ProjectConfig::EVENT_REBUILD, function(RebuildConfigEvent $e) {
@@ -154,5 +141,22 @@ class FabPermissions extends Plugin
         Event::on(Sites::class, Sites::EVENT_AFTER_DELETE_SITE, [$this->fabService, 'handleDeletedSite']);
         Event::on(Fields::class, Fields::EVENT_AFTER_DELETE_FIELD_LAYOUT, [$this->fabService, 'handleDeletedLayout']);
         Event::on(UserGroups::class, UserGroups::EVENT_AFTER_DELETE_USER_GROUP, [$this->fabService, 'handleDeletedUserGroup']);
+    }
+
+    /**
+     * Attach event handlers
+     * @author Josh Smith <me@joshsmith.dev>
+     * @return void
+     */
+    protected function handleEvents()
+    {
+        // Process the saving of permisisons on tabs and fields
+        Event::on(
+            Fields::class,
+            Fields::EVENT_AFTER_SAVE_FIELD_LAYOUT,
+            function(FieldLayoutEvent $event) {
+                $this->fabService->saveFieldLayoutPermissions($event->layout);
+            }
+        );
     }
 }

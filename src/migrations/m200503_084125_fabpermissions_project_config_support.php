@@ -6,6 +6,7 @@ use thejoshsmith\fabpermissions\records\FabPermissionsRecord;
 
 use Craft;
 use craft\db\Migration;
+use craft\db\Query;
 use craft\helpers\MigrationHelper;
 
 /**
@@ -24,6 +25,22 @@ class m200503_084125_fabpermissions_project_config_support extends Migration
         // Rename tabId to tabName and update type
         $this->renameColumn(FabPermissionsRecord::tableName(), 'tabId', 'tabName');
         $this->alterColumn(FabPermissionsRecord::tableName(), 'tabName', $this->string());
+
+        $tabs = (new Query())
+            ->select(['id', 'name'])
+            ->from('{{%fieldlayouttabs}}')
+        ->all();
+
+        if( !empty($tabs) ){
+            foreach ($tabs as $tab) {
+                Craft::$app->db->createCommand()
+                    ->update(FabPermissionsRecord::tableName(), ['tabName' => $tab['name']], ['tabName' => $tab['id']])
+                ->execute();
+            }
+        }
+
+        // Rebuild the project config to add permissions currently stored in the DB
+        Craft::$app->getProjectConfig()->rebuild();
     }
 
     /**

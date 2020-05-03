@@ -310,7 +310,7 @@ class Fab extends Component
      */
     public function assembleProjectConfigData()
     {
-        $records = FabPermissionsRecord::findAll();
+        $records = FabPermissionsRecord::find()->all();
         if( empty($records) ) return;
 
         $data = [];
