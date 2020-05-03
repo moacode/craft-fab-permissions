@@ -56,7 +56,7 @@ class FabPermissions extends Plugin
      *
      * @var string
      */
-    public $schemaVersion = '1.0.3';
+    public $schemaVersion = '1.5.0';
 
     // Public Methods
     // =========================================================================
