@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.5.0-beta.1 - 2020-05-03
+### Changed
+- Added support for project config.
+
 ## 1.4.0 - 2020-05-02
 ### Changed
 - Fixed an issue where form unload wasn't working properly due to changes in Craft 3.4.
