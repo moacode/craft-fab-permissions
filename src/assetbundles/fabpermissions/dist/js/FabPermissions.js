@@ -279,13 +279,14 @@ Craft.FabPermissions = Garnish.Base.extend({
 	/**
 	 * Adds a tab hidden input to the DOM
 	 * @author Josh Smith <josh.smith@platocreative.co.nz>
-	 * @param  {object}  $tab          jQuery collection
-	 * * @param  {string}  type        Permission type, either canView or canEdit
-	 * @param  {string}  handle        User group handle
-	 * @param  {Boolean} hasPermission Whether or not this user group has permissions to view this tab
+	 * @param  {object}  $tab       jQuery collection
+	 * * @param  {string}  type     Permission type, either canView or canEdit
+	 * @param  {string}  handle     User group handle
+	 * @param  {Boolean} value 		Tab input value
 	 */
-	addTabInput: function($tab, type, handle, hasPermission){
-		$tab.append('<input class="fab-id-input js--fab-tab-input" type="hidden" name="'+this._getFieldInputName($tab)+'['+handle+']['+type+']" value="'+(hasPermission ? '1' : '0')+'">');
+	addTabInput: function($tab, type, handle, value){
+		value = typeof value === 'boolean' ? String(+value) : value; // Convert boolean values to string
+		$tab.append('<input class="fab-id-input js--fab-tab-input" type="hidden" name="'+this._getFieldInputName($tab)+'['+handle+']['+type+']" value="'+value+'">');
 	},
 
 	/**
@@ -301,13 +302,14 @@ Craft.FabPermissions = Garnish.Base.extend({
 	/**
 	 * Adds a field hidden input to the DOM
 	 * @author Josh Smith <josh.smith@platocreative.co.nz>
-	 * @param  {object}  $field        jQuery collection
-	 * @param  {string}  type          Permission type, either canView or canEdit
-	 * @param  {string}  handle        User group handle
-	 * @param  {Boolean} hasPermission Whether or not this user group has permissions to view this field
+	 * @param  {object}  $field     jQuery collection
+	 * @param  {string}  type       Permission type, either canView or canEdit
+	 * @param  {string}  handle     User group handle
+	 * @param  {Boolean} value 		Field input value
 	 */
-	addFieldInput: function($field, type, handle, hasPermission){
-		$field.append('<input class="fab-id-input js--fab-field-input" type="hidden" data-id="'+$field.data('id')+'" data-handle="'+handle+'" data-type="'+type+'" name="fieldPermissions['+$field.data('id')+']['+handle+']['+type+']" value="'+(hasPermission ? '1' : '0')+'">');
+	addFieldInput: function($field, type, handle, value){
+		value = typeof value === 'boolean' ? String(+value) : value; // Convert boolean values to string
+		$field.append('<input class="fab-id-input js--fab-field-input" type="hidden" data-id="'+$field.data('id')+'" data-handle="'+handle+'" data-type="'+type+'" name="fieldPermissions['+$field.data('id')+']['+handle+']['+type+']" value="'+value+'">');
 	},
 
 	/**
@@ -777,10 +779,24 @@ Craft.TabUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.ext
 		// Loop through each non-disabled checkbox option, and render hidden inputs into the DOM.
 		this.$form.find('.tableview input[type="checkbox"]').each(function(i, checkbox){
 
-			var $checkbox = $(checkbox);
+			var $checkbox = $(checkbox),
+				tabName = self.settings.$el.data('fabPermissions').originalName,
+				userGroup = $checkbox.val(),
+				permission = $checkbox.data('type');
+
+			// Attempt to pull out the ID
+			var id = (FabPermissions.data.tabs[tabName] &&
+				FabPermissions.data.tabs[tabName][userGroup] &&
+				FabPermissions.data.tabs[tabName][userGroup].id ?
+			FabPermissions.data.tabs[tabName][userGroup].id : null);
 
 			// Append the hidden input
-			FabPermissions.addTabInput(self.settings.$el, $checkbox.data('type'), $checkbox.val(), $checkbox.is(':checked'));
+			FabPermissions.addTabInput(self.settings.$el, permission, userGroup, $checkbox.is(':checked'));
+
+			// Repopulate UID
+			if( id != null ){
+				FabPermissions.addTabInput(self.settings.$el, 'id', userGroup, id);
+			}
 		});
 
 		FabPermissions.showFabIcon(self.settings.$el.find('.tab'));
@@ -849,10 +865,24 @@ Craft.FieldUserPermissionSelectorModal = Craft.BaseUserPermissionSelectorModal.e
 		// Loop through each non-disabled checkbox option, and render hidden inputs into the DOM.
 		this.$form.find('.tableview input[type="checkbox"]').each(function(i, checkbox){
 
-			var $checkbox = $(checkbox);
+			var $checkbox = $(checkbox),
+				fieldId = self.settings.$el.data('id'),
+				userGroup = $checkbox.val(),
+				permission = $checkbox.data('type');
+
+			// Attempt to pull out the ID
+			var id = (FabPermissions.data.fields[fieldId] &&
+				FabPermissions.data.fields[fieldId][userGroup] &&
+				FabPermissions.data.fields[fieldId][userGroup].id ?
+			FabPermissions.data.fields[fieldId][userGroup].id : null);
 
 			// Append the hidden input
 			FabPermissions.addFieldInput(self.settings.$el, $checkbox.data('type'), $checkbox.val(), $checkbox.is(':checked'));
+
+			// Repopulate UID
+			if( id != null ){
+				FabPermissions.addFieldInput(self.settings.$el, 'id', userGroup, id);
+			}
 		});
 
 		FabPermissions.showFabIcon(self.settings.$el);

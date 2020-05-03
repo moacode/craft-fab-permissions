@@ -11,12 +11,16 @@ namespace thejoshsmith\fabpermissions;
 
 use thejoshsmith\fabpermissions\services\Fab as FabService;
 use thejoshsmith\fabpermissions\services\Fields;
+use thejoshsmith\fabpermissions\assetbundles\fabpermissions\FabPermissionsAsset;
 
 use Craft;
 use craft\base\Plugin;
 use craft\events\FieldLayoutEvent;
-use thejoshsmith\fabpermissions\assetbundles\fabpermissions\FabPermissionsAsset;
-
+use craft\events\ConfigEvent;
+// use craft\events\RebuildConfigEvent;
+use craft\services\ProjectConfig;
+use craft\services\Sites;
+use craft\services\UserGroups;
 use yii\base\Event;
 
 /**
@@ -127,5 +131,27 @@ class FabPermissions extends Plugin
                 $this->fabService->saveFieldLayoutPermissions($event->layout);
             }
         );
+
+        // Event::on(ProjectConfig::class, ProjectConfig::EVENT_REBUILD, function(RebuildConfigEvent $e) {
+        //     $e->config['fieldAndTabPermissions']['layoutId'] = $value;
+        //     $e->config['fieldAndTabPermissions']['tabId'] = $value;
+        //     $e->config['fieldAndTabPermissions']['fieldId'] = $value;
+        //     $e->config['fieldAndTabPermissions']['siteId'] = $value;
+        //     $e->config['fieldAndTabPermissions']['userGroupId'] = $value;
+        //     $e->config['fieldAndTabPermissions']['canView'] = $value;
+        //     $e->config['fieldAndTabPermissions']['canEdit'] = $value;
+        // });
+
+        // Listen for project config events
+        Craft::$app->projectConfig
+            ->onAdd('fieldAndTabPermissions.{uid}', [$this->fabService, 'handleChangedPermission'])
+            ->onUpdate('fieldAndTabPermissions.{uid}', [$this->fabService, 'handleChangedPermission'])
+            ->onRemove('fieldAndTabPermissions.{uid}', [$this->fabService, 'handleDeletedPermission']);
+
+        // Remove permissions linked to deleted elements
+        Event::on(Fields::class, Fields::EVENT_AFTER_DELETE_FIELD, [$this->fabService, 'handleDeletedField']);
+        Event::on(Sites::class, Sites::EVENT_AFTER_DELETE_SITE, [$this->fabService, 'handleDeletedSite']);
+        Event::on(Fields::class, Fields::EVENT_AFTER_DELETE_FIELD_LAYOUT, [$this->fabService, 'handleDeletedLayout']);
+        Event::on(UserGroups::class, UserGroups::EVENT_AFTER_DELETE_USER_GROUP, [$this->fabService, 'handleDeletedUserGroup']);
     }
 }

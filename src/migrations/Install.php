@@ -51,7 +51,6 @@ class Install extends Migration
         $this->driver = Craft::$app->getConfig()->getDb()->driver;
         if ($this->createTables()) {
             $this->createIndexes();
-            $this->addForeignKeys();
             // Refresh the db schema caches
             Craft::$app->db->schema->refresh();
             $this->insertDefaultData();
@@ -98,7 +97,7 @@ class Install extends Migration
                 [
                     'id' => $this->primaryKey(),
                     'layoutId' => $this->integer()->notNull(),
-                    'tabId' => $this->integer(),
+                    'tabName' => $this->string(),
                     'fieldId' => $this->integer(),
                     'siteId' => $this->integer()->notNull(),
                     'userGroupId' => $this->integer()->null(),
@@ -128,64 +127,6 @@ class Install extends Migration
             case DbConfig::DRIVER_PGSQL:
                 break;
         }
-    }
-
-    /**
-     * Creates the foreign keys needed for the Records used by the plugin
-     *
-     * @return void
-     */
-    protected function addForeignKeys()
-    {
-        $this->addForeignKey(
-            $this->db->getForeignKeyName(FabPermissionsRecord::tableName(), 'siteId'),
-            FabPermissionsRecord::tableName(),
-            'siteId',
-            '{{%sites}}',
-            'id',
-            'CASCADE',
-            'CASCADE'
-        );
-
-        $this->addForeignKey(
-            $this->db->getForeignKeyName(FabPermissionsRecord::tableName(), 'tabId'),
-            FabPermissionsRecord::tableName(),
-            'tabId',
-            '{{%fieldlayouttabs}}',
-            'id',
-            'CASCADE',
-            'CASCADE'
-        );
-
-         $this->addForeignKey(
-            $this->db->getForeignKeyName(FabPermissionsRecord::tableName(), 'fieldId'),
-            FabPermissionsRecord::tableName(),
-            'fieldId',
-            '{{%fieldlayoutfields}}',
-            'fieldId',
-            'CASCADE',
-            'CASCADE'
-        );
-
-         $this->addForeignKey(
-            $this->db->getForeignKeyName(FabPermissionsRecord::tableName(), 'layoutId'),
-            FabPermissionsRecord::tableName(),
-            'layoutId',
-            '{{%fieldlayouts}}',
-            'id',
-            'CASCADE',
-            'CASCADE'
-        );
-
-         $this->addForeignKey(
-            $this->db->getForeignKeyName(FabPermissionsRecord::tableName(), 'userGroupId'),
-            FabPermissionsRecord::tableName(),
-            'userGroupId',
-            '{{%usergroups}}',
-            'id',
-            'CASCADE',
-            'CASCADE'
-        );
     }
 
     /**
