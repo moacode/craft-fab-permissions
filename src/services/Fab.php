@@ -304,6 +304,27 @@ class Fab extends Component
     }
 
     /**
+     * Assembles the full project config data based on the current database state
+     * @author Josh Smith <josh@batch.nz>
+     * @return array
+     */
+    public function assembleProjectConfigData()
+    {
+        $records = FabPermissionsRecord::findAll();
+        if( empty($records) ) return;
+
+        $data = [];
+        foreach ($records as $record) {
+            foreach ($record as $key => $value) {
+                if( in_array($key, ['dateCreated', 'dateUpdated', 'uid']) ) continue;
+                $data[self::CONFIG_KEY][$record['uid']][$key] = $value;
+            }
+        }
+
+        return $data;
+    }
+
+    /**
      * Handles changed project config permissions
      * @author Josh Smith <josh@batch.nz>
      * @since  1.5.0 Added project config support

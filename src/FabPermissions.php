@@ -132,15 +132,16 @@ class FabPermissions extends Plugin
             }
         );
 
-        // Event::on(ProjectConfig::class, ProjectConfig::EVENT_REBUILD, function(RebuildConfigEvent $e) {
-        //     $e->config['fieldAndTabPermissions']['layoutId'] = $value;
-        //     $e->config['fieldAndTabPermissions']['tabId'] = $value;
-        //     $e->config['fieldAndTabPermissions']['fieldId'] = $value;
-        //     $e->config['fieldAndTabPermissions']['siteId'] = $value;
-        //     $e->config['fieldAndTabPermissions']['userGroupId'] = $value;
-        //     $e->config['fieldAndTabPermissions']['canView'] = $value;
-        //     $e->config['fieldAndTabPermissions']['canEdit'] = $value;
-        // });
+        /**
+         * Rebuilds the field and tabs permission project config data from the database
+         */
+        Event::on(ProjectConfig::class, ProjectConfig::EVENT_REBUILD, function(RebuildConfigEvent $e) {
+            $configData = $this->fabService->assembleProjectConfigData();
+
+            if( !empty($configData) ){
+                $e->config = $configData;
+            }
+        });
 
         // Listen for project config events
         Craft::$app->projectConfig
