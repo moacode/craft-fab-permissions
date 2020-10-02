@@ -61,6 +61,18 @@ class Fields extends CraftFieldsService
         foreach ($tabs as $i => $tab) {
             if( !$fabService->canViewTab($tab, $user) ){
                 unset($tabs[$i]);
+            } elseif (isset($tab->elements)) {
+                foreach ($tab->elements as $j => $element) {
+                    if (!($element instanceof \craft\fieldlayoutelements\CustomField)) {
+                        continue;
+                    }
+                    $field = $element->getField();
+                    if (!$fabService->canViewField($layoutId, $field, $user)) {
+                        unset($tab->elements[$j]);
+                    } elseif (!$fabService->canEditField($layoutId, $field, $user)) {
+                        $element->setField(new StaticFieldDecorator($field));
+                    }
+                }
             }
         }
 
