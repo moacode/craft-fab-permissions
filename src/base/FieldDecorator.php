@@ -207,4 +207,14 @@ abstract class FieldDecorator extends Decorator implements FieldInterface {
 	{
 		return parent::afterElementRestore($element);
 	}
+
+	public function getContentGqlMutationArgumentType()
+	{
+		return parent::getContentGqlMutationArgumentType();
+	}
+
+	public function getContentGqlQueryArgumentType()
+	{
+		return parent::getContentGqlQueryArgumentType();
+	}
 }
