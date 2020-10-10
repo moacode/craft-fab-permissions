@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 2.0.0 - 2020-10-10
+### Changed
+- Upgraded to support Craft 3.5.x
+- New custom elements are supported (fields only at this stage)
+- Replaced dot indicators with locked/unlocked padlock symbols
+- Improved error handling
+
 ## 1.4.0 - 2020-05-02
 ### Changed
 - Fixed an issue where form unload wasn't working properly due to changes in Craft 3.4.
