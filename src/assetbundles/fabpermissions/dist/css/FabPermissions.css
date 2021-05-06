@@ -9,18 +9,29 @@
  * @package   CraftHQ
  * @since     1.0.0
  */
-.icon.users:before {
-	content: '\F111';
-	font-size: 12px;
-	color: #d75946;
-	opacity: 1;
+.fab-icon {
+    margin-right: 7px;
+}
+.icon.unlocked:before {
+    content: '\F09C';
+    font-size: 16px;
+    color: #0B69A3;
+    opacity: 0.5;
+    margin-top: -0.2px;
+    width: auto;
+    height: auto;
+}
+.icon.locked:before {
+    content: '\F023';
+    font-size: 16px;
+    color: #0B69A3;
+    margin-top: -0.2px;
+    width: auto;
+    height: auto;
 }
 .fab-spinner {
     background-size: 18px;
     height: 18px;
-}
-.fab-inline {
-	display: inline-block;
 }
 .fab-my-0 {
 	margin-top: 0 !important;

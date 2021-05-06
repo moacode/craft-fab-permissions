@@ -16,34 +16,6 @@ use thejoshsmith\fabpermissions\decorators\StaticFieldDecorator;
 class Fields extends CraftFieldsService
 {
     /**
-     * Returns the fields in a field layout, identified by its ID.
-     *
-     * @param int $layoutId The field layout’s ID
-     * @return FieldInterface[] The fields
-     */
-    public function getFieldsByLayoutId(int $layoutId): array
-    {
-        $fields = parent::getFieldsByLayoutId($layoutId);
-        if( !$this->_shouldCheckPermissions() ) return $fields;
-
-        $user = Craft::$app->getUser();
-        $fabService = FabPermissions::$plugin->fabService;
-
-        // Check if this user has permissions to view this field
-        foreach ($fields as $i => $field) {
-            if( !$fabService->canViewField($layoutId, $field, $user) ){
-                unset($fields[$i]);
-            } else {
-                if( !$fabService->canEditField($layoutId, $field, $user) ){
-                    $fields[$i] = new StaticFieldDecorator($field);
-                }
-            }
-        }
-
-        return $fields;
-    }
-
-    /**
      * Returns a layout's tabs by its ID.
      *
      * @param int $layoutId The field layout’s ID
@@ -61,6 +33,23 @@ class Fields extends CraftFieldsService
         foreach ($tabs as $i => $tab) {
             if( !$fabService->canViewTab($tab, $user) ){
                 unset($tabs[$i]);
+                continue;
+            }
+
+            // Loop tab elements and apply permissions to custom fields
+            // Todo: investigate what can be done with custom elements
+            foreach ($tab->elements as $i => $element) {
+                if( is_a($element, "craft\\fieldlayoutelements\\CustomField") ){
+                    $field = $element->getField();
+
+                    if( !$fabService->canViewField($layoutId, $field, $user) ){
+                        unset($tab->elements[$i]);
+                    } else {
+                        if( !$fabService->canEditField($layoutId, $field, $user) ){
+                            $element->setField(new StaticFieldDecorator($field));
+                        }
+                    }
+                }
             }
         }
 
@@ -83,7 +72,7 @@ class Fields extends CraftFieldsService
 
     /**
      * Returns true if the plugin is installed and enabled
-     * We need to do this check here as this service will be overriden in app config, 
+     * We need to do this check here as this service will be overriden in app config,
      * regardless of whether the plugin is actually installed/enabled or not.
      * @return boolean
      */
@@ -91,7 +80,7 @@ class Fields extends CraftFieldsService
     {
         $plugins = Craft::$app->getPlugins();
         $isPluginInstalled = $plugins->isPluginInstalled(FabPermissions::PLUGIN_HANDLE);
-        $isPluginEnabled = $plugins->isPluginEnabled(FabPermissions::PLUGIN_HANDLE);        
+        $isPluginEnabled = $plugins->isPluginEnabled(FabPermissions::PLUGIN_HANDLE);
 
         return $isPluginInstalled && $isPluginEnabled;
     }

@@ -3,9 +3,11 @@
 namespace thejoshsmith\fabpermissions\controllers;
 
 use thejoshsmith\fabpermissions\FabPermissions;
+use thejoshsmith\fabpermissions\records\FabPermissionsRecord;
 
 use Craft;
 use craft\web\Controller;
+use yii\base\Exception;
 
 /**
  * Fab Permissions Controller
@@ -69,7 +71,12 @@ class FabPermissionsController extends Controller
 
             // Loop permission records and assign to tab data
             foreach ($tabPermissions as $permission) {
-                $userGroupHandle = (is_null($permission->userGroupId) ? $fabService::$adminPermissionHandle : $permission->getUserGroup()->handle);
+                try {
+                    $userGroupHandle = $this->_getUserGroupHandleFromPermission($permission);
+                } catch(\Exception $e) {
+                    continue;
+                }
+
                 $tabsData[$tab->name][$userGroupHandle] = [
                     'id' => $permission->id ?? '',
                     $fabService::$viewPermissionHandle => $permission->hasViewPermission(),
@@ -86,7 +93,12 @@ class FabPermissionsController extends Controller
 
         // Loop permission records and assign to tab data
         foreach ($fieldPermissions as $permission) {
-            $userGroupHandle = (is_null($permission->userGroupId) ? $fabService::$adminPermissionHandle : $permission->getUserGroup()->handle);
+            try {
+                $userGroupHandle = $this->_getUserGroupHandleFromPermission($permission);
+            } catch(Exception $e) {
+                continue;
+            }
+
             $fieldsData[$permission->fieldId][$userGroupHandle] = [
                 'id' => $permission->id ?? '',
                 $fabService::$viewPermissionHandle => $permission->hasViewPermission(),
@@ -100,5 +112,27 @@ class FabPermissionsController extends Controller
                 'fields' => $fieldsData
             ]
         ]);
+    }
+
+    /**
+     * Returns a user group handle from the passed permission record
+     * @author Josh Smith <me@joshsmith.dev>
+     * @param  FabPermissionsRecord $permission
+     * @return string
+     */
+    private function _getUserGroupHandleFromPermission(FabPermissionsRecord $permission): string
+    {
+        $fabService = FabPermissions::$plugin->fabService;
+
+        if( is_null($permission->userGroupId) ){
+            return $fabService::$adminPermissionHandle;
+        }
+
+        $userGroup = $permission->getUserGroup();
+        if( empty($userGroup) ){
+            throw new Exception('Failed to find user group.');
+        }
+
+        return $userGroup->handle;
     }
 }

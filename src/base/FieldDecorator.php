@@ -9,6 +9,7 @@ use craft\base\FieldInterface;
 use craft\base\ElementInterface;
 use craft\elements\db\ElementQuery;
 use craft\elements\db\ElementQueryInterface;
+use craft\models\GqlSchema;
 
 /**
  * Abstract decorator that implements the field interface so decorated fields can be used internally
@@ -113,6 +114,11 @@ abstract class FieldDecorator extends Decorator implements FieldInterface {
 		return parent::getTranslationKey($element);
 	}
 
+	public function useFieldset(): bool
+	{
+		return parent::useFieldset();
+	}
+
 	public function getInputHtml($value, ElementInterface $element = null): string
 	{
 		return parent::getInputHtml($value, $element);
@@ -168,6 +174,11 @@ abstract class FieldDecorator extends Decorator implements FieldInterface {
 		return parent::getGroup();
 	}
 
+	public function includeInGqlSchema(GqlSchema $schema): bool
+	{
+		return parent::includeInGqlSchema($schema);
+	}
+
     public function getContentGqlType()
     {
         return parent::getContentGqlType();
@@ -206,5 +217,15 @@ abstract class FieldDecorator extends Decorator implements FieldInterface {
 	public function afterElementRestore(ElementInterface $element)
 	{
 		return parent::afterElementRestore($element);
+	}
+
+	public function getContentGqlMutationArgumentType()
+	{
+		return parent::getContentGqlMutationArgumentType();
+	}
+
+	public function getContentGqlQueryArgumentType()
+	{
+		return parent::getContentGqlQueryArgumentType();
 	}
 }

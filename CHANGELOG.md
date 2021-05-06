@@ -4,9 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 1.5.0-beta.1 - 2020-05-03
+## 2.0.2-beta.1 - 2021-05-06
 ### Changed
 - Added support for project config.
+
+## 2.0.1 - 2021-04-05
+### Fixed
+- Upgraded to support Craft 3.6.x
+## 2.0.0 - 2020-10-10
+### Changed
+- Upgraded to support Craft 3.5.x
+- New custom elements are supported (fields only at this stage)
+- Replaced dot indicators with locked/unlocked padlock symbols
+- Improved error handling
 
 ## 1.4.0 - 2020-05-02
 ### Changed
