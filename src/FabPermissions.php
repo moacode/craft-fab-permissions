@@ -11,12 +11,16 @@ namespace thejoshsmith\fabpermissions;
 
 use thejoshsmith\fabpermissions\services\Fab as FabService;
 use thejoshsmith\fabpermissions\services\Fields;
+use thejoshsmith\fabpermissions\assetbundles\fabpermissions\FabPermissionsAsset;
 
 use Craft;
 use craft\base\Plugin;
 use craft\events\FieldLayoutEvent;
-use thejoshsmith\fabpermissions\assetbundles\fabpermissions\FabPermissionsAsset;
-
+use craft\events\ConfigEvent;
+use craft\events\RebuildConfigEvent;
+use craft\services\ProjectConfig;
+use craft\services\Sites;
+use craft\services\UserGroups;
 use yii\base\Event;
 
 /**
@@ -52,7 +56,7 @@ class FabPermissions extends Plugin
      *
      * @var string
      */
-    public $schemaVersion = '1.0.3';
+    public $schemaVersion = '1.5.0';
 
     // Public Methods
     // =========================================================================
@@ -64,6 +68,7 @@ class FabPermissions extends Plugin
 
         // Register services
         $this->registerComponents();
+        $this->registerProjectConfig();
 
         // Ensure we only init the plugin on CP requests.
         if( !Craft::$app->getRequest()->getIsCpRequest() ) return false;
@@ -110,6 +115,32 @@ class FabPermissions extends Plugin
     protected function registerComponents()
     {
         Craft::$app->setComponents(['fabService' => FabService::class]);
+    }
+
+    protected function registerProjectConfig()
+    {
+         /**
+         * Rebuilds the field and tabs permission project config data from the database
+         */
+        Event::on(ProjectConfig::class, ProjectConfig::EVENT_REBUILD, function(RebuildConfigEvent $e) {
+            $configData = $this->fabService->assembleProjectConfigData();
+
+            if( !empty($configData) ){
+                $e->config = $configData;
+            }
+        });
+
+        // Listen for project config events
+        Craft::$app->projectConfig
+            ->onAdd('fieldAndTabPermissions.{uid}', [$this->fabService, 'handleChangedPermission'])
+            ->onUpdate('fieldAndTabPermissions.{uid}', [$this->fabService, 'handleChangedPermission'])
+            ->onRemove('fieldAndTabPermissions.{uid}', [$this->fabService, 'handleDeletedPermission']);
+
+        // Remove permissions linked to deleted elements
+        Event::on(Fields::class, Fields::EVENT_AFTER_DELETE_FIELD, [$this->fabService, 'handleDeletedField']);
+        Event::on(Sites::class, Sites::EVENT_AFTER_DELETE_SITE, [$this->fabService, 'handleDeletedSite']);
+        Event::on(Fields::class, Fields::EVENT_AFTER_DELETE_FIELD_LAYOUT, [$this->fabService, 'handleDeletedLayout']);
+        Event::on(UserGroups::class, UserGroups::EVENT_AFTER_DELETE_USER_GROUP, [$this->fabService, 'handleDeletedUserGroup']);
     }
 
     /**
