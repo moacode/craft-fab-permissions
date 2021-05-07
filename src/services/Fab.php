@@ -79,7 +79,7 @@ class Fab extends Component
         // Fetch permission records
         $fabPermissions = FabPermissionsRecord::findAll([
             'layoutId' => $tab->getLayout()->id,
-            'tabName' => $tab->id,
+            'tabName' => $tab->name,
             'siteId' => $currentSite->id
         ]);
 
