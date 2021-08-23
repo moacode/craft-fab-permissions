@@ -228,4 +228,19 @@ abstract class FieldDecorator extends Decorator implements FieldInterface {
 	{
 		return parent::getContentGqlQueryArgumentType();
 	}
+
+    public function copyValue(ElementInterface $from, ElementInterface $to): void
+    {
+        parent::copyValue($from, $to);
+    }
+
+    public function getOrientation(?ElementInterface $element): string
+    {
+        return parent::getOrientation($element);
+    }
+
+    public function getStatus(ElementInterface $element): ?array
+    {
+        return parent::getStatus($element);
+    }
 }
