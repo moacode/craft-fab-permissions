@@ -22,7 +22,7 @@ To install the plugin, follow these instructions.
 
 3. In the Control Panel, go to Settings → Plugins and click the “Install” button for FAB Permissions.
 
-4. **Important** - Override the Craft Fields Service with the FAB Permissions Fields Service in `config/app.php`:
+4. **Important** - Override the Craft Fields Service with the FAB Permissions Fields Service in `config/app.web.php`:
 
 		return [
 			'components' => [
