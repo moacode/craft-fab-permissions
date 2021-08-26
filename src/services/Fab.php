@@ -12,9 +12,18 @@ namespace thejoshsmith\fabpermissions\services;
 
 use Craft;
 use craft\base\Component;
+use craft\base\Field;
+use craft\db\Query;
+use craft\events\ConfigEvent;
+use craft\events\FieldEvent;
+use craft\events\FieldLayoutEvent;
+use craft\events\SiteEvent;
+use craft\events\UserGroupEvent;
+use craft\helpers\Db;
+use craft\helpers\StringHelper;
 use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
-use craft\base\Field;
+use craft\records\FieldLayoutTab as FieldLayoutTabRecord;
 use craft\web\User;
 use yii\base\Exception;
 
@@ -28,6 +37,8 @@ use thejoshsmith\fabpermissions\records\FabPermissionsRecord;
  */
 class Fab extends Component
 {
+    const CONFIG_KEY = 'fieldAndTabPermissions';
+
     /**
      * Define the permission handles
      * @var string
@@ -68,7 +79,7 @@ class Fab extends Component
         // Fetch permission records
         $fabPermissions = FabPermissionsRecord::findAll([
             'layoutId' => $tab->getLayout()->id,
-            'tabId' => $tab->id,
+            'tabName' => $tab->name,
             'siteId' => $currentSite->id
         ]);
 
@@ -165,80 +176,296 @@ class Fab extends Component
      */
     public function saveFieldLayoutPermissions(FieldLayout $layout)
     {
+        $uids = [];
         $request = Craft::$app->getRequest();
         $hasPostData = $request->post('tabPermissions') || $request->post('fieldPermissions');
         $tabPermissions = $request->post('tabPermissions') ?? [];
         $fieldPermissions = $request->post('fieldPermissions') ?? [];
 
-        // we can't continue if there's no post data
-        if( empty($hasPostData) ) return false;
+        // The front end didn't finish loading before it was saved
+        // TODO: Remove this once the below has been addressed.
+        if( $request->post('fabPermissionsAbort') ){
+            return;
+        }
 
-        $fabPermissionsData = [];
-        $currentSite = Craft::$app->sites->getCurrentSite();
+        // No POST? Clean up all permissions just to be safe
+        // TODO: use joins to clear stale information and run instead of deletePermissions().
+        if( empty($hasPostData) ){
+            return $this->deletePermissions($layout->id);
+        };
 
-        // Loop tabs and work out permissions
         foreach ($layout->getTabs() as $tab) {
             foreach ($tabPermissions as $tabName => $permissions) {
-
+                // Skip if this isn't the right tab
                 if( urldecode($tabName) !== $tab->name ) continue;
 
-                // Fetch the user group ID
-                foreach ($permissions as $handle => $permissions) {
-
-                    // Detect the User Group Id
-                    $userGroupId = $this->getUserGroupIdFromHandle($handle);
-                    $canViewValue = ($userGroupId === null ? '1' : $permissions[self::$viewPermissionHandle]);
-
-                    $fabPermissionsData[] = [
-                        $layout->id,
-                        $tab->id,
-                        null,
-                        $currentSite->id,
-                        $userGroupId,
-                        (isset($canViewValue) ? $canViewValue : '0'),
-                        '1' // This isn't configurable via the front end
-                    ];
-                }
+                // Save tab permissions and merge UIDs
+                $tabUids = $this->savePermissions($layout->id, $tab->name, null, $permissions);
+                $uids = array_merge($uids, $tabUids);
             }
         }
 
-        // Loop field permissions and work out permissions
-        foreach ($fieldPermissions as $fieldId => $values) {
-            foreach ($values as $handle => $permissions) {
+        foreach ($fieldPermissions as $fieldId => $permissions) {
+            // Save field permissions and store UIDs
+            $fieldUids = $this->savePermissions($layout->id, null, $fieldId, $permissions);
+            $uids = array_merge($uids, $fieldUids);
+        }
 
-                // Detect the User Group Id
-                $userGroupId = $this->getUserGroupIdFromHandle($handle);
-                $canViewValue = ($userGroupId === null ? '1' : $permissions[self::$viewPermissionHandle]);
-                $canEditValue = ($userGroupId === null ? '1' : $permissions[self::$editPermissionHandle]);
+        // Ensure stale permissions records are removed
+        // We do this by passing in the list of valid uuids for this field layout
+        $this->removeStalePermissionsByUids($layout->id, $uids);
+    }
 
-                $fabPermissionsData[] = [
-                    $layout->id,
-                    null,
-                    $fieldId,
-                    $currentSite->id,
-                    $userGroupId,
-                    (isset($canViewValue) ? $canViewValue : '0'),
-                    (isset($canEditValue) ? $canEditValue : '0'),
-                ];
+    /**
+     * Removes stale permissions for the passed layout by an array of UIDs
+     * Permissions are considered stale if they are not in the UID array
+     * @author Josh Smith <josh@batch.nz>
+     * @param  int    $layoutId
+     * @param  array  $uids
+     * @return void
+     */
+    public function removeStalePermissionsByUids(int $layoutId, array $uids = [])
+    {
+        if( empty($uids) ) return;
+
+        // Remove stale permissions that were cleared
+        $staleRecords = FabPermissionsRecord::find()
+            ->select(['uid'])
+            ->where(['NOT IN', 'uid', $uids])
+            ->andWhere(['layoutId' => $layoutId])
+            ->all();
+
+        if( !empty($staleRecords) ){
+            foreach ($staleRecords as $staleRecord) {
+                $path = self::CONFIG_KEY.'.'.$staleRecord['uid'];
+                Craft::$app->projectConfig->remove($path);
+            }
+        }
+    }
+
+    /**
+     * Saves permissions and writes to project config
+     * @author Josh Smith <josh@batch.nz>
+     * @param  int         $layoutId    ID of the field layout
+     * @param  string|null $tabName     Name of the tab
+     * @param  int|null    $fieldId     Field ID
+     * @param  array       $permissions An array of permissions in `'permissionHandle' => true` format
+     * @return array                    An array of UUIDs
+     */
+    public function savePermissions(int $layoutId, string $tabName = null, int $fieldId = null, array $permissions)
+    {
+        $uids = [];
+        $currentSite = Craft::$app->sites->getCurrentSite();
+
+        foreach ($permissions as $handle => $perms) {
+
+            // Fetch or generate a UID for this record
+            $uid = empty($perms['id']) ?
+                $uid = StringHelper::UUID() :
+                Db::uidById(FabPermissionsRecord::tableName(), $perms['id']);
+
+            // Work out the user groups and permissions
+            $uids[] = $uid;
+            $userGroupId = $this->getUserGroupIdFromHandle($handle);
+            $canViewValue = ($userGroupId === null ? '1' : $perms[self::$viewPermissionHandle]);
+            $canEditValue = ($userGroupId === null || !empty($tabName) ? '1' : $perms[self::$editPermissionHandle]);
+
+            $config = [
+                'layoutId' => $layoutId,
+                'tabName' => $tabName,
+                'fieldId' => $fieldId,
+                'siteId' => $currentSite->id,
+                'userGroupId' => $userGroupId,
+                self::$viewPermissionHandle => (isset($canViewValue) ? $canViewValue : '0'),
+                self::$editPermissionHandle => (isset($canEditValue) ? $canEditValue : '0')
+            ];
+
+            // Write to project config
+            $path = self::CONFIG_KEY.'.'.$uid;
+            Craft::$app->projectConfig->set($path, $config);
+        }
+
+        return $uids;
+    }
+
+    /**
+     * Deletes permissions for the passed layoutId
+     * @author Josh Smith <josh@batch.nz>
+     * @param  int $layoutId
+     * @return void
+     */
+    public function deletePermissions(int $layoutId)
+    {
+        $results = (new Query())
+            ->select(['uid'])
+            ->from(FabPermissionsRecord::tableName())
+            ->where(['layoutId' => $layoutId])
+        ->all();
+
+        if( empty($results) ) return;
+
+        foreach ($results as $result) {
+            $path = self::CONFIG_KEY.'.'.$result['uid'];
+            Craft::$app->projectConfig->remove($path);
+        }
+    }
+
+    /**
+     * Assembles the full project config data based on the current database state
+     * @author Josh Smith <josh@batch.nz>
+     * @return array
+     */
+    public function assembleProjectConfigData()
+    {
+        $records = FabPermissionsRecord::find()->all();
+        if( empty($records) ) return;
+
+        $data = [];
+        foreach ($records as $record) {
+            foreach ($record as $key => $value) {
+                if( in_array($key, ['dateCreated', 'dateUpdated', 'uid']) ) continue;
+                $data[self::CONFIG_KEY][$record['uid']][$key] = $value;
             }
         }
 
-        // Determine the fields to use
-        $fabPermissionsRecord = new FabPermissionsRecord();
-        $fields = array_values(
-            array_intersect($fabPermissionsRecord->attributes(), [
-                'layoutId',
-                'tabId',
-                'fieldId',
-                'siteId',
-                'userGroupId',
-                self::$viewPermissionHandle,
-                self::$editPermissionHandle,
-            ]
-        ));
+        return $data;
+    }
 
-        if( !empty($fabPermissionsData) ){
-            Craft::$app->db->createCommand()->batchInsert(FabPermissionsRecord::tableName(), $fields, $fabPermissionsData)->execute();
+    /**
+     * Handles changed project config permissions
+     * @author Josh Smith <josh@batch.nz>
+     * @since  1.5.0 Added project config support
+     * @param  ConfigEvent $event
+     * @return void
+     */
+    public function handleChangedPermission(ConfigEvent $event)
+    {
+        // Get the UID that was matched in the config path
+        $uid = $event->tokenMatches[0];
+
+        // Does this permission exist?
+        $id = (new Query())
+            ->select(['id'])
+            ->from(FabPermissionsRecord::tableName())
+            ->where(['uid' => $uid])
+            ->scalar();
+
+        $isNew = empty($id);
+
+        // Insert or update its row
+        if ($isNew) {
+            Craft::$app->db->createCommand()
+                ->insert(FabPermissionsRecord::tableName(), array_merge($event->newValue, ['uid' => $uid]))
+            ->execute();
+        } else {
+            Craft::$app->db->createCommand()
+                ->update(FabPermissionsRecord::tableName(), $event->newValue, ['id' => $id])
+            ->execute();
+        }
+    }
+
+    /**
+     * Handles deleted project config permissions
+     * @author Josh Smith <josh@batch.nz>
+     * @since  1.5.0 Added project config support
+     * @param  ConfigEvent $event
+     * @return void
+     */
+    public function handleDeletedPermission(ConfigEvent $event)
+    {
+        // Get the UID that was matched in the config path
+        $uid = $event->tokenMatches[0];
+
+        // Get the permission record
+        $permission = FabPermissionsRecord::find()
+            ->where(['uid' => $uid])
+        ->one();
+
+        // If that came back empty, we're done!
+        if (!$permission) {
+            return;
+        }
+
+        // Delete its row
+        Craft::$app->db->createCommand()
+            ->delete(FabPermissionsRecord::tableName(), ['id' => $permission->id])
+        ->execute();
+    }
+
+    /**
+     * Handles the deletion of a field
+     * @author Josh Smith <josh@batch.nz>
+     * @param  FieldEvent $event
+     * @return void
+     */
+    public function handleDeletedField(FieldEvent $event)
+    {
+        $results = (new Query())
+            ->select(['uid'])
+            ->from(FabPermissionsRecord::tableName())
+            ->where(['fieldId' => $event->field->id])
+        ->all();
+
+        if( empty($results) ) return;
+
+        foreach ($results as $result) {
+            $path = self::CONFIG_KEY.'.'.$result['uid'];
+            Craft::$app->projectConfig->remove($path);
+        }
+    }
+
+    /**
+     * Handles the deletion of a site
+     * @author Josh Smith <josh@batch.nz>
+     * @param  SiteEvent $event
+     * @return void
+     */
+    public function handleDeletedSite(SiteEvent $event)
+    {
+        $results = (new Query())
+            ->select(['uid'])
+            ->from(FabPermissionsRecord::tableName())
+            ->where(['siteId' => $event->site->id])
+        ->all();
+
+        if( empty($results) ) return;
+
+        foreach ($results as $result) {
+            $path = self::CONFIG_KEY.'.'.$result['uid'];
+            Craft::$app->projectConfig->remove($path);
+        }
+    }
+
+    /**
+     * Removes all layout permissions from the database
+     * @author Josh Smith <josh@batch.nz>
+     * @param  FieldLayoutEvent $event
+     * @return void
+     */
+    public function handleDeletedLayout(FieldLayoutEvent $event)
+    {
+        return $this->deletePermissions($event->layout->id);
+    }
+
+    /**
+     * Handles the deletion of a user group
+     * @author Josh Smith <josh@batch.nz>
+     * @param  UserGroupEvent $event
+     * @return void
+     */
+    public function handleDeletedUserGroup(UserGroupEvent $event)
+    {
+        $results = (new Query())
+            ->select(['uid'])
+            ->from(FabPermissionsRecord::tableName())
+            ->where(['userGroupId' => $event->userGroup->id])
+        ->all();
+
+        if( empty($results) ) return;
+
+        foreach ($results as $result) {
+            $path = self::CONFIG_KEY.'.'.$result['uid'];
+            Craft::$app->projectConfig->remove($path);
         }
     }
 
@@ -260,12 +487,12 @@ class Fab extends Component
         return $group->id;
     }
 
-     /**
+    /**
      * Returns whether the current Craft request is supported for parsing permissions
      * @since 1.4.0
      * @author Josh Smith <me@joshsmith.dev>
      * @return boolean
-     */
+    */
     public function isSupportedRequest()
     {
         $user = Craft::$app->user;
