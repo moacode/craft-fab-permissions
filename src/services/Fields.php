@@ -132,6 +132,13 @@ class Fields extends CraftFieldsService
             // Loop tab elements and apply permissions to custom fields
             // Todo: investigate what can be done with custom elements
             foreach ($tab->elements as $i => $element) {
+
+                if(is_a($element, "craft\\fieldlayoutelements\\EntryTitleField")){
+                    if($user->getIdentity()->isInGroup('readOnly')) {
+                        $element->disabled = true;
+                    }
+                }
+
                 if( is_a($element, "craft\\fieldlayoutelements\\CustomField") ){
                     $field = $element->getField();
 
