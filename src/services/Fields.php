@@ -3,9 +3,6 @@
 namespace thejoshsmith\fabpermissions\services;
 
 use Craft;
-use craft\db\Query;
-use craft\db\Table;
-use craft\models\FieldLayout;
 use craft\services\Fields as CraftFieldsService;
 use craft\base\FieldInterface;
 
@@ -18,96 +15,6 @@ use thejoshsmith\fabpermissions\decorators\StaticFieldDecorator;
  */
 class Fields extends CraftFieldsService
 {
-    /**
-     * @var
-     */
-    private $_layoutsById;
-
-    /**
-     * Returns field layouts by their IDs.
-     *
-     * @param int[] $layoutIds The field layouts’ IDs
-     * @return FieldLayout[] The field layouts
-     * @since 3.7.27
-     */
-    public function getLayoutsByIds(array $layoutIds): array
-    {
-        $response = [];
-
-        // Don't re-fetch any layouts we've already memoized
-        if (isset($this->_layoutsById)) {
-            foreach ($layoutIds as $key => $id) {
-                if (array_key_exists($id, $this->_layoutsById)) {
-                    if ($this->_layoutsById[$id] !== null) {
-                        $response[$id] = $this->_layoutsById[$id];
-                    }
-                    unset($layoutIds[$key]);
-                }
-            }
-        }
-
-        if (!empty($layoutIds)) {
-            $result = $this->_createLayoutQuery()
-                ->andWhere(['id' => $layoutIds])
-                ->all();
-
-            $layouts = [];
-
-            foreach ($result as $row) {
-                $this->_layoutsById[$row['id']] = $response[$row['id']] = $layouts[$row['id']] = new FieldLayout($row);
-            }
-
-            $this->_loadTabs($layouts);
-        }
-
-        return $response;
-    }
-
-    /**
-     * Returns a Query object prepped for retrieving layouts.
-     *
-     * @return Query
-     */
-    private function _createLayoutQuery(): Query
-    {
-        $query = (new Query)
-            ->select([
-                'id',
-                'type',
-                'uid',
-            ])
-            ->from([Table::FIELDLAYOUTS]);
-
-        // todo: remove schema version condition after next beakpoint
-        $schemaVersion = Craft::$app->getInstalledSchemaVersion();
-        if (version_compare($schemaVersion, '3.1.0', '>=')) {
-            $query->where(['dateDeleted' => null]);
-        }
-
-        return $query;
-    }
-
-    /**
-     * Fetches the layout tabs for the given layouts.
-     *
-     * @param FieldLayout[] $layouts Field layouts indexed by their IDs
-     */
-    private function _loadTabs(array $layouts): void
-    {
-        if (empty($layouts)) {
-            return;
-        }
-
-        $tabsByLayoutId = [];
-        foreach(array_keys($layouts) as $layoutId){
-            $tabsByLayoutId[$layoutId] = $this->getLayoutTabsById($layoutId);
-        }
-
-        foreach ($tabsByLayoutId as $layoutId => $tabs) {
-            $layouts[$layoutId]->setTabs($tabs);
-        }
-    }
-
     /**
      * Returns a layout's tabs by its ID.
      *
