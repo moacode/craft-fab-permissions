@@ -9,13 +9,16 @@
 
 namespace thejoshsmith\fabpermissions;
 
-use thejoshsmith\fabpermissions\services\Fab as FabService;
-use thejoshsmith\fabpermissions\services\Fields;
-
 use Craft;
 use craft\base\Plugin;
 use craft\events\FieldLayoutEvent;
+use craft\elements\Entry;
+use craft\events\CreateFieldLayoutFormEvent;
+use craft\models\FieldLayout;
 use thejoshsmith\fabpermissions\assetbundles\fabpermissions\FabPermissionsAsset;
+use thejoshsmith\fabpermissions\decorators\StaticFieldDecorator;
+use thejoshsmith\fabpermissions\services\Fab as FabService;
+use thejoshsmith\fabpermissions\services\Fields;
 
 use yii\base\Event;
 
@@ -67,12 +70,6 @@ class FabPermissions extends Plugin
 
         // Ensure we only init the plugin on CP requests.
         if( !Craft::$app->getRequest()->getIsCpRequest() ) return false;
-
-        // Show a warning to the user if the component config hasn't been overriden.
-        $fieldsService = Craft::$app->getFields();
-        if( !is_a($fieldsService, 'thejoshsmith\\fabpermissions\\services\\Fields') ){
-            Craft::$app->getSession()->setError('Fab Permissions Plugin: Please override the fields service in your app config - Check the README for more information.');
-        }
 
         // Bootstrap this plugin
         $this->registerAssetBundles();
@@ -127,5 +124,75 @@ class FabPermissions extends Plugin
                 $this->fabService->saveFieldLayoutPermissions($event->layout);
             }
         );
+        
+        if( $this->_shouldCheckPermissions() ) {
+
+            Event::on(
+                FieldLayout::class,
+                FieldLayout::EVENT_CREATE_FORM,
+                function(CreateFieldLayoutFormEvent $event) {
+
+                    if (!$event->element instanceof Entry) {
+                        return;
+                    }
+
+                    $layoutId = $event->sender->id;
+                    $user = Craft::$app->getUser();
+                    $fabService = FabPermissions::$plugin->fabService;
+
+                    foreach($event->tabs as $k => $tab){
+
+                        if( !$fabService->canViewTab($tab, $user) ){
+                            unset($event->tabs[$k]);
+                            continue;
+                        }
+
+                        foreach ($tab->elements as $i => $element) {
+
+                            if( is_a($element, "craft\\fieldlayoutelements\\CustomField") ){
+                                $field = $element->getField();
+
+                                if( !$fabService->canViewField($layoutId, $field, $user) ){
+                                    unset($tab->elements[$i]);
+                                } else {
+                                    if( !$fabService->canEditField($layoutId, $field, $user) ){
+                                        $element->setField(new StaticFieldDecorator($field));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+        }
+    }
+
+    /**
+     * Determines whether the service should check permissions
+     * @return boolean
+     */
+    private function _shouldCheckPermissions(): bool
+    {
+        if( !$this->_isFabPermissionsRunning() ) return false;
+
+        $fabService = FabPermissions::$plugin->fabService;
+        if( !$fabService->isSupportedRequest() ) return false;
+
+        return true;
+    }
+
+    /**
+     * Returns true if the plugin is installed and enabled
+     * We need to do this check here as this service will be overriden in app config,
+     * regardless of whether the plugin is actually installed/enabled or not.
+     * @return boolean
+     */
+    private function _isFabPermissionsRunning(): bool
+    {
+        $plugins = Craft::$app->getPlugins();
+        $isPluginInstalled = $plugins->isPluginInstalled(FabPermissions::PLUGIN_HANDLE);
+        $isPluginEnabled = $plugins->isPluginEnabled(FabPermissions::PLUGIN_HANDLE);
+
+        return $isPluginInstalled && $isPluginEnabled;
     }
 }
